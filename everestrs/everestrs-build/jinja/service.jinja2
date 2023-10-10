@@ -1,0 +1,68 @@
+/// {{trait.description}}
+pub(crate) trait {{trait.name | title}}ServiceSubscriber: Sync + Send {
+{%- for cmd in trait.cmds %}
+   /// {{cmd.description}}
+   ///
+   {%- for arg in cmd.arguments %}
+   /// `{{arg.name}}`: {{arg.description}}
+   {%- endfor %}
+   {%- if cmd.result -%}
+   ///
+   /// Returns: {{cmd.result.description}}
+   {% endif %}
+   fn {{cmd.name}}(&self,
+      publishers: &ModulePublisher,
+   {%- for arg in cmd.arguments %}
+      {{arg.name}}: {{arg.data_type}},
+   {%- endfor %}
+   ) -> ::everestrs::Result<{%- if cmd.result -%}
+      {{cmd.result.data_type}}
+   {%- else -%}
+      ()
+   {%- endif -%}>;
+{% endfor %}
+}
+
+pub(super) fn dispatch_command_to_{{ trait.name | snake }}(
+   publishers: &ModulePublisher,
+   service: &dyn {{trait.name | title}}ServiceSubscriber,
+   cmd_name: &str,
+   mut parameters: ::std::collections::HashMap<String, ::serde_json::Value>,
+) -> ::everestrs::Result<::serde_json::Value> {
+   match cmd_name {
+{%- for cmd in trait.cmds %}
+   "{{ cmd.name }}" => {
+{%- for arg in cmd.arguments %}
+      let {{ arg.name }}: {{ arg.data_type }} = ::serde_json::from_value(
+         parameters.remove("{{ arg.name }}")
+            .ok_or(::everestrs::Error::MissingArgument("{{ arg.name }}"))?,
+          )
+          .map_err(|_| ::everestrs::Error::InvalidArgument("{{ arg.name }}"))?;
+{%- endfor %}
+       let retval = service.{{ cmd.name }}(publishers, 
+{%- for arg in cmd.arguments %}
+            {{ arg.name }},
+{%- endfor %}
+       )?;
+       Ok(retval.into())
+    },
+{%- endfor %}
+      _ => Err(::everestrs::Error::InvalidArgument("Unknown command called.")),
+   }
+}
+
+#[derive(Clone)]
+#[allow(unused)]
+pub(crate) struct {{trait.name | title }}ServicePublisher {
+    implementation_id: &'static str,
+    runtime: ::std::sync::Arc<::everestrs::Runtime>,
+}
+
+impl {{trait.name | title }}ServicePublisher {
+{% for var in trait.vars %}
+   pub(crate) fn {{ var.name }}(&self, value: {{ var.data_type }}) -> ::everestrs::Result<()> {
+      self.runtime.publish_variable(self.implementation_id, "{{ var.name }} ", &value);
+      Ok(())
+   }
+{% endfor %}
+}

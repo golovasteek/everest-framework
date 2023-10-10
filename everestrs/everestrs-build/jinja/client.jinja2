@@ -1,0 +1,44 @@
+/// {{trait.description}}
+// NOCOM(#sirver): This should do something with the variables.
+pub(crate) trait {{trait.name | title}}ClientSubscriber: Sync + Send {
+}
+
+#[derive(Clone)]
+#[allow(unused)]
+pub(crate) struct {{trait.name | title }}ClientPublisher {
+    implementation_id: &'static str,
+    runtime: ::std::sync::Arc<::everestrs::Runtime>,
+}
+
+impl {{trait.name | title }}ClientPublisher {
+{%- for cmd in trait.cmds %}
+   /// {{cmd.description}}
+   ///
+   {%- for arg in cmd.arguments %}
+   /// `{{arg.name}}`: {{arg.description}}
+   {%- endfor %}
+   {%- if cmd.result -%}
+   ///
+   /// Returns: {{cmd.result.description}}
+   {% endif %}
+   pub(crate) fn {{cmd.name}}(&self,
+   {%- for arg in cmd.arguments %}
+      {{arg.name}}: {{arg.data_type}},
+   {%- endfor %}
+   ) -> ::everestrs::Result<{%- if cmd.result -%}
+      {{cmd.result.data_type}}
+   {%- else -%}
+      ()
+   {%- endif -%}
+      > {
+        let args = serde_json::json!({
+{%- for arg in cmd.arguments %}
+            "{{arg.name}}": {{arg.name}},
+{%- endfor %}
+        });
+        let blob = self.runtime.call_command(self.implementation_id, "{{ cmd.name }}", &args);
+        ::serde_json::from_value(blob).map_err(|_| ::everestrs::Error::InvalidArgument("return_value"))
+
+      }
+{% endfor %}
+}

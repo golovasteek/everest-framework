@@ -1,0 +1,120 @@
+mod generated {
+
+#![allow(clippy::let_unit_value, clippy::useless_conversion)]
+
+/// Called when the module receives on_ready from EVerest.
+pub(crate) trait OnReadySubscriber: Sync + Send {
+    fn on_ready(&self, pub_impl: &ModulePublisher);
+}
+
+{% for trait in provided_interfaces %}
+{% include "service" %}
+{% endfor %}
+
+{% for trait in required_interfaces %}
+{% include "client" %}
+{% endfor %}
+
+#[allow(dead_code)]
+pub(crate) struct ModulePublisher {
+{% for provide in provides %}
+   pub(crate) {{ provide.implementation_id }}: {{provide.interface | title}}ServicePublisher,
+{% endfor %}
+{% for require in requires %}
+   pub(crate) {{ require.implementation_id }}: {{require.interface | title}}ClientPublisher,
+{% endfor %}
+}
+
+#[allow(dead_code)]
+pub(crate) struct Module {
+    on_ready: ::std::sync::Arc<dyn OnReadySubscriber>,
+{% for provide in provides %}
+   {{ provide.implementation_id }}: ::std::sync::Arc<dyn {{provide.interface | title}}ServiceSubscriber>,
+{% endfor %}
+{% for require in requires %}
+   {{ require.implementation_id }}: ::std::sync::Arc<dyn {{require.interface | title}}ClientSubscriber>,
+{% endfor %}
+
+    publisher: ModulePublisher,
+}
+
+impl Module {
+    #[must_use]
+    pub(crate) fn new(
+        on_ready: ::std::sync::Arc<dyn OnReadySubscriber>,
+{% for provide in provides %}
+        {{ provide.implementation_id }}: ::std::sync::Arc<dyn {{provide.interface | title}}ServiceSubscriber>,
+{% endfor %}
+{% for require in requires %}
+      {{ require.implementation_id }}: ::std::sync::Arc<dyn {{require.interface | title}}ClientSubscriber>,
+{% endfor %}
+    ) -> ::std::sync::Arc<Self> {
+        let runtime = ::std::sync::Arc::new(::everestrs::Runtime::new());
+        let this = ::std::sync::Arc::new(Self {
+            on_ready,
+{% for provide in provides %}
+            {{ provide.implementation_id }},
+{% endfor %}
+{% for require in requires %}
+            {{ require.implementation_id }},
+{% endfor %}
+            publisher: ModulePublisher {
+{% for provide in provides %}
+   {{ provide.implementation_id }}: {{provide.interface | title}}ServicePublisher {
+      implementation_id: "{{ provide.implementation_id }}",
+      runtime: runtime.clone(),
+      },
+{% endfor %}
+{% for require in requires %}
+        {{ require.implementation_id }}: {{require.interface | title}}ClientPublisher {
+      implementation_id: "{{ require.implementation_id }}",
+      runtime: runtime.clone(),
+      },
+{% endfor %}
+            },
+        });
+
+        runtime.set_subscriber(::std::sync::Arc::<Module>::downgrade(&this));
+        this
+    }
+}
+
+impl ::everestrs::Subscriber for Module {
+    #[allow(unused_variables)]
+    fn handle_command(
+        &self,
+        implementation_id: &str,
+        cmd_name: &str,
+        parameters: ::std::collections::HashMap<String, serde_json::Value>,
+    ) -> ::everestrs::Result<serde_json::Value> {
+        match implementation_id {
+{% for provide in provides %}
+   "{{ provide.implementation_id }}" => {
+   dispatch_command_to_{{ provide.interface | snake }}(&self.publisher, self.{{ provide.implementation_id }}.as_ref(), cmd_name, parameters)
+},
+{% endfor %}
+            _ => Err(::everestrs::Error::InvalidArgument(
+                "Unknown implementation_id called.",
+            )),
+        }
+    }
+
+    // NOCOM(#sirver): this should do something.
+    #[allow(unused_variables)]
+    fn handle_variable(
+        &self,
+        implementation_id: &str,
+        name: &str,
+        value: serde_json::Value,
+    ) -> ::everestrs::Result<()> {
+        Err(::everestrs::Error::InvalidArgument(
+            "Unknown variable received.",
+        ))
+    }
+
+    fn on_ready(&self) {
+        self.on_ready.on_ready(&self.publisher)
+    }
+}
+
+}

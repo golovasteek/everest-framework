@@ -1,7 +1,7 @@
 mod codegen;
 mod schema;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use std::io::Write;
 use std::path::PathBuf;
 
@@ -10,19 +10,16 @@ pub struct Builder {
     everest_core: PathBuf,
     // TODO(hrapp): This is almost always the same anyways.
     manifest_path: PathBuf,
-    module_name: String,
     out_dir: Option<PathBuf>,
 }
 
 impl Builder {
     pub fn new(
-        module_name: impl Into<String>,
         manifest_path: impl Into<PathBuf>,
         everest_core: impl Into<PathBuf>,
     ) -> Self {
         Self {
             everest_core: everest_core.into(),
-            module_name: module_name.into(),
             manifest_path: manifest_path.into(),
             ..Builder::default()
         }
@@ -39,9 +36,9 @@ impl Builder {
             .unwrap_or_else(|| PathBuf::from(std::env::var("OUT_DIR").unwrap()))
             .join("generated.rs");
 
-        let out = codegen::emit(self.module_name, self.manifest_path, self.everest_core)?;
+        let out = codegen::emit(self.manifest_path, self.everest_core)?;
 
-        let mut f = std::fs::File::create(path)?;
+        let mut f = std::fs::File::create(path).context("Could not generate the output file.")?;
         f.write_all(out.as_bytes())?;
         Ok(())
     }

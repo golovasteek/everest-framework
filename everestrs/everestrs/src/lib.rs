@@ -21,7 +21,12 @@ pub type Result<T> = ::std::result::Result<T, Error>;
 mod ffi {
     extern "Rust" {
         type Runtime;
-        fn handle_command(self: &Runtime, implementation_id: &str, name: &str, json: JsonBlob) -> JsonBlob;
+        fn handle_command(
+            self: &Runtime,
+            implementation_id: &str,
+            name: &str,
+            json: JsonBlob,
+        ) -> JsonBlob;
         fn handle_variable(self: &Runtime, implementation_id: &str, name: &str, json: JsonBlob);
         fn on_ready(&self);
     }
@@ -241,10 +246,11 @@ impl Runtime {
             let interface_s = self.cpp_module.get_interface(&implementation.interface);
             let interface: schema::Interface = interface_s.deserialize();
             for (name, _) in interface.cmds {
-                self.cpp_module
-                    .as_ref()
-                    .unwrap()
-                    .provide_command(self, implementation_id.clone(), name);
+                self.cpp_module.as_ref().unwrap().provide_command(
+                    self,
+                    implementation_id.clone(),
+                    name,
+                );
             }
         }
 
@@ -254,10 +260,11 @@ impl Runtime {
             let interface_s = self.cpp_module.get_interface(&provides.interface);
             let interface: schema::Interface = interface_s.deserialize();
             for (name, _) in interface.vars {
-                self.cpp_module
-                    .as_ref()
-                    .unwrap()
-                    .subscribe_variable(self, implementation_id.clone(), name);
+                self.cpp_module.as_ref().unwrap().subscribe_variable(
+                    self,
+                    implementation_id.clone(),
+                    name,
+                );
             }
         }
 

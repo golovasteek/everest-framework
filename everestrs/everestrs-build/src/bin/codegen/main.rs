@@ -10,10 +10,6 @@ struct Args {
     #[argh(option)]
     pub everest_core: PathBuf,
 
-    /// name of module to generate
-    #[argh(option)]
-    pub module_name: String,
-
     /// manifest to generate code for
     #[argh(option)]
     pub manifest: PathBuf,
@@ -26,7 +22,7 @@ struct Args {
 pub fn main() -> Result<()> {
     let args: Args = argh::from_env();
 
-    Builder::new(args.module_name, args.manifest, args.everest_core)
+    Builder::new(args.manifest, args.everest_core)
         .out_dir(args.out_dir)
         .generate()?;
     Ok(())

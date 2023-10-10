@@ -4,7 +4,6 @@ use std::collections::BTreeMap;
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Interface {
-    pub name: Option<String>,
     pub description: String,
     #[serde(default)]
     pub cmds: BTreeMap<String, Command>,
