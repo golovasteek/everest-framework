@@ -26,10 +26,10 @@ pub(crate) trait {{trait.name | title}}ServiceSubscriber: Sync + Send {
 pub(super) fn dispatch_command_to_{{ trait.name | snake }}(
    publishers: &ModulePublisher,
    service: &dyn {{trait.name | title}}ServiceSubscriber,
-   cmd_name: &str,
+   name: &str,
    mut parameters: ::std::collections::HashMap<String, ::serde_json::Value>,
 ) -> ::everestrs::Result<::serde_json::Value> {
-   match cmd_name {
+   match name {
 {%- for cmd in trait.cmds %}
    "{{ cmd.name }}" => {
 {%- for arg in cmd.arguments %}
@@ -52,7 +52,6 @@ pub(super) fn dispatch_command_to_{{ trait.name | snake }}(
 }
 
 #[derive(Clone)]
-#[allow(unused)]
 pub(crate) struct {{trait.name | title }}ServicePublisher {
     implementation_id: &'static str,
     runtime: ::std::sync::Arc<::everestrs::Runtime>,

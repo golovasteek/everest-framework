@@ -1,10 +1,30 @@
 /// {{trait.description}}
-// NOCOM(#sirver): This should do something with the variables.
 pub(crate) trait {{trait.name | title}}ClientSubscriber: Sync + Send {
+{% for var in trait.vars %}
+   fn on_{{ var.name | snake }}(&self, publishers: &ModulePublisher, value: {{ var.data_type }});
+{% endfor %}
+}
+
+pub(super) fn dispatch_variable_to_{{ trait.name | snake }}(
+   publishers: &ModulePublisher,
+   client_subscriber: &dyn {{trait.name | title}}ClientSubscriber,
+   name: &str,
+   value: ::serde_json::Value,
+) -> ::everestrs::Result<()> {
+   match name {
+{%- for var in trait.vars %}
+   "{{ var.name }}" => {
+   let v: {{ var.data_type }} = ::serde_json::from_value(value)
+         .map_err(|_| ::everestrs::Error::InvalidArgument("{{ var.name }}"))?;
+         client_subscriber.on_{{ var.name }}(publishers, v);
+                Ok(())
+    },
+{%- endfor %}
+     _ => Err(::everestrs::Error::InvalidArgument("Unknown variable received.")),
+   }
 }
 
 #[derive(Clone)]
-#[allow(unused)]
 pub(crate) struct {{trait.name | title }}ClientPublisher {
     implementation_id: &'static str,
     runtime: ::std::sync::Arc<::everestrs::Runtime>,

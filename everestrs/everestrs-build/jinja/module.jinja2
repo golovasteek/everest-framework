@@ -1,6 +1,6 @@
 mod generated {
 
-#![allow(clippy::let_unit_value, clippy::useless_conversion)]
+#![allow(clippy::let_unit_value, clippy::useless_conversion, clippy::match_single_binding, dead_code, unused_mut, unused_variables)]
 
 /// Called when the module receives on_ready from EVerest.
 pub(crate) trait OnReadySubscriber: Sync + Send {
@@ -15,7 +15,7 @@ pub(crate) trait OnReadySubscriber: Sync + Send {
 {% include "client" %}
 {% endfor %}
 
-#[allow(dead_code)]
+#[derive(Clone)]
 pub(crate) struct ModulePublisher {
 {% for provide in provides %}
    pub(crate) {{ provide.implementation_id }}: {{provide.interface | title}}ServicePublisher,
@@ -25,7 +25,6 @@ pub(crate) struct ModulePublisher {
 {% endfor %}
 }
 
-#[allow(dead_code)]
 pub(crate) struct Module {
     on_ready: ::std::sync::Arc<dyn OnReadySubscriber>,
 {% for provide in provides %}
@@ -80,17 +79,16 @@ impl Module {
 }
 
 impl ::everestrs::Subscriber for Module {
-    #[allow(unused_variables)]
     fn handle_command(
         &self,
         implementation_id: &str,
-        cmd_name: &str,
+        name: &str,
         parameters: ::std::collections::HashMap<String, serde_json::Value>,
     ) -> ::everestrs::Result<serde_json::Value> {
         match implementation_id {
 {% for provide in provides %}
    "{{ provide.implementation_id }}" => {
-   dispatch_command_to_{{ provide.interface | snake }}(&self.publisher, self.{{ provide.implementation_id }}.as_ref(), cmd_name, parameters)
+   dispatch_command_to_{{ provide.interface | snake }}(&self.publisher, self.{{ provide.implementation_id }}.as_ref(), name, parameters)
 },
 {% endfor %}
             _ => Err(::everestrs::Error::InvalidArgument(
@@ -99,17 +97,22 @@ impl ::everestrs::Subscriber for Module {
         }
     }
 
-    // NOCOM(#sirver): this should do something.
-    #[allow(unused_variables)]
     fn handle_variable(
         &self,
         implementation_id: &str,
         name: &str,
         value: serde_json::Value,
     ) -> ::everestrs::Result<()> {
-        Err(::everestrs::Error::InvalidArgument(
-            "Unknown variable received.",
-        ))
+        match implementation_id {
+{% for req in requires %}
+         "{{ req.implementation_id }}" => {
+         dispatch_variable_to_{{ req.interface | snake }}(&self.publisher, self.{{ req.implementation_id }}.as_ref(), name, value)
+      },
+      {% endfor %}
+      _ => Err(::everestrs::Error::InvalidArgument(
+                  "Unknown variable received.",
+              ))
+        }
     }
 
     fn on_ready(&self) {
