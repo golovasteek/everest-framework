@@ -6,10 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-minijinja = "1.0.8"
 anyhow = "1.0.75"
-serde_yaml = "0.9.25"
 argh = "0.1.12"
+convert_case = "0.6.0"
+everestrs = { path = "../../../../everest-framework/everestrs/everestrs" }
+minijinja = "1.0.8"
 serde = "1.0.188"
 serde_json = "1.0.107"
-convert_case = "0.6.0"
+serde_yaml = "0.9.25"
