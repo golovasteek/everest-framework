@@ -127,7 +127,7 @@ impl<'de> Deserialize<'de> for Variable {
 
         let arg_type = map
             .remove("type")
-            .ok_or(serde::de::Error::custom("Missing 'type'"))?;
+            .unwrap_or(serde_yaml::Value::String("object".to_string()));
 
         let arg = match arg_type {
             val @ serde_yaml::Value::String(_) => {

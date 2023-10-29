@@ -10,6 +10,7 @@ pub struct Manifest {
     #[serde(default)]
     pub requires: BTreeMap<String, RequiresEntry>,
     pub metadata: Metadata,
+    enable_external_mqtt: bool,
 }
 
 #[derive(Debug, Deserialize)]

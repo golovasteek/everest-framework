@@ -10,6 +10,9 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+// TODO(hrapp): The generated code is not pretty and contains a lot of whitespace. Jinja has
+// features (i.e. '{% and %}') to make the whitespace better, but I have a lot of trouble applying
+// them betetr 
 const SERVICE_JINJA: &str = include_str!("../jinja/service.jinja2");
 const CLIENT_JINJA: &str = include_str!("../jinja/client.jinja2");
 const MODULE_JINJA: &str = include_str!("../jinja/module.jinja2");
@@ -40,7 +43,7 @@ impl TypeRef {
 
     fn from_reference(r: &str) -> Self {
         let mut it = r.trim_start_matches('/').split("#/");
-        // NOCOM(#sirver): error handling
+        // TODO(hrapp): This should do some error handling.
         let module_name = it.next().unwrap().to_string();
         let module_path = module_name.split('/').map(|s| s.to_string()).collect();
         let type_name = it.next().unwrap().to_string();
@@ -160,7 +163,8 @@ impl InterfaceContext {
     ) -> Result<Self> {
         let p = everest_core.join(format!("interfaces/{}.yaml", name));
         let blob = fs::read_to_string(&p).with_context(|| format!("Reading {p:?}"))?;
-        let interface_yaml: Interface = serde_yaml::from_str(&blob)?;
+        let interface_yaml: Interface =
+            serde_yaml::from_str(&blob).with_context(|| format!("While parsing {p:?}"))?;
 
         Ok(InterfaceContext {
             name: name.to_string(),
@@ -214,9 +218,10 @@ fn type_context_from_ref(
 
     let p = everest_core.join(format!("types/{}.yaml", r.module_path.join("/")));
     let blob = fs::read_to_string(&p).with_context(|| format!("Reading {p:?}"))?;
-    let data_types_yaml: DataTypes = serde_yaml::from_str(&blob)?;
+    let data_types_yaml: DataTypes =
+        serde_yaml::from_str(&blob).with_context(|| format!("While parsing {p:?}"))?;
 
-    // NOCOM(#sirver): error checking
+    // TODO(hrapp): This should do some error checking.
     let type_descr = data_types_yaml.types.get(&r.type_name).unwrap();
     match &type_descr.arg {
         Single(Object(args)) => {
@@ -274,7 +279,6 @@ struct RenderContext {
     type_module: TypeModuleContext,
 }
 
-// NOCOM(#sirver): better understand the %- and -%
 fn title_case(arg: String) -> String {
     arg.to_case(Case::Pascal)
 }
@@ -309,7 +313,7 @@ fn handle_implementations(
 
 pub fn emit(manifest_path: PathBuf, everest_core: PathBuf) -> Result<String> {
     let blob = fs::read_to_string(&manifest_path).context("reading manifest file")?;
-    let manifest: Manifest = serde_yaml::from_str(&blob)?;
+    let manifest: Manifest = serde_yaml::from_str(&blob).context("While parsing manifest")?;
 
     let mut env = Environment::new();
     env.set_undefined_behavior(UndefinedBehavior::Strict);
@@ -349,23 +353,21 @@ pub fn emit(manifest_path: PathBuf, everest_core: PathBuf) -> Result<String> {
             }
             let mut module = &mut type_module_root;
             for p in &t.module_path {
-                // NOCOM(#sirver): this could use references
+                // TODO(hrapp): Cloning is not really necessary, this could use &str instead of
+                // String
                 module = module.children.entry(p.clone()).or_default();
             }
-            // NOCOM(#sirver): this reparses the same yamls over and over again.
-            // instead, I should parse the whole subtree and build a hashmap from ref to
-            // description
+            // TODO(hrapp): this reparses the same yamls over and over again. instead, I should
+            // parse the whole subtree and build a hashmap from ref to description
             match type_context_from_ref(t, &everest_core, &mut new)? {
                 TypeContext::Object(item) => module.objects.push(item),
                 TypeContext::Enum(item) => module.enums.push(item),
             }
             done.insert(t.clone());
         }
-        println!("#sirver new: {:#?}", new);
         type_refs.extend(new.into_iter());
     }
 
-    println!("#sirver type_module_root: {:#?}", type_module_root);
     let context = RenderContext {
         provided_interfaces,
         required_interfaces,

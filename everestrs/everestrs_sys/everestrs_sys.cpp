@@ -15,7 +15,6 @@ std::unique_ptr<Everest::Everest> create_everest_instance(const std::string& mod
                                               rs.telemetry_prefix, rs.telemetry_enabled);
 }
 
-// NOCOM(#sirver): The config has merit on its own, without a Module configuration. Pull out into a separate interface and reuse in codegen
 std::unique_ptr<Everest::Config> create_config_instance(const Everest::RuntimeSettings& rs) {
     // FIXME (aw): where to initialize the logger?
     Everest::Logging::init(rs.logging_config_file);

@@ -1,14 +1,14 @@
-/// {{trait.description}}
+/// {{trait.description | replace("\n", " ")}}
 pub(crate) trait {{trait.name | title}}ServiceSubscriber: Sync + Send {
 {%- for cmd in trait.cmds %}
-   /// {{cmd.description}}
+   /// {{cmd.description | replace("\n", " ")}}
    ///
    {%- for arg in cmd.arguments %}
-   /// `{{arg.name}}`: {{arg.description}}
+   /// `{{arg.name}}`: {{arg.description | replace("\n", " ")}}
    {%- endfor %}
    {%- if cmd.result -%}
    ///
-   /// Returns: {{cmd.result.description}}
+   /// Returns: {{cmd.result.description | replace("\n", " ")}}
    {% endif %}
    fn {{cmd.name}}(&self,
       publishers: &ModulePublisher,

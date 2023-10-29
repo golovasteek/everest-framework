@@ -8,7 +8,7 @@ pub mod {{ name }} {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct {{ object.name }} {
 {% for p in object.properties %}
-/// {{ p.description }}
+/// {{ p.description | replace("\n", " ") }}
 pub {{ p.name }}: {{ p.data_type }},
 {% endfor %}
 }
