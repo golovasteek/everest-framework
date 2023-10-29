@@ -2,6 +2,10 @@ mod generated {
 
 #![allow(clippy::let_unit_value, clippy::useless_conversion, clippy::match_single_binding, dead_code, unused_mut, unused_variables)]
 
+pub mod types {
+{% include "type_module" %}
+}
+
 /// Called when the module receives on_ready from EVerest.
 pub(crate) trait OnReadySubscriber: Sync + Send {
     fn on_ready(&self, pub_impl: &ModulePublisher);

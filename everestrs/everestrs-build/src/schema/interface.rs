@@ -1,5 +1,5 @@
 use serde::{Deserialize, Deserializer, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -38,13 +38,15 @@ pub enum Argument {
 pub struct NumberOptions {
     pub minimum: Option<f64>,
     pub maximum: Option<f64>,
+    pub default: Option<f64>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct IntegerOptions {
-    pub minimum: Option<f64>,
-    pub maximum: Option<f64>,
+    pub minimum: Option<i64>,
+    pub maximum: Option<i64>,
+    pub default: Option<i64>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -62,7 +64,7 @@ pub struct ObjectOptions {
     pub properties: BTreeMap<String, Variable>,
 
     #[serde(default)]
-    pub required: Vec<String>,
+    pub required: HashSet<String>,
 
     #[serde(default)]
     pub additional_properties: bool,
@@ -87,6 +89,8 @@ pub struct StringOptions {
 
     #[serde(rename = "enum")]
     pub enum_items: Option<Vec<String>>,
+
+    pub default: Option<String>,
 
     #[serde(rename = "$ref")]
     pub object_reference: Option<String>,

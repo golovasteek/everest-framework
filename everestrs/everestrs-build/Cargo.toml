@@ -9,7 +9,6 @@ edition = "2021"
 anyhow = "1.0.75"
 argh = "0.1.12"
 convert_case = "0.6.0"
-everestrs = { path = "../../../../everest-framework/everestrs/everestrs" }
 minijinja = "1.0.8"
 serde = "1.0.188"
 serde_json = "1.0.107"

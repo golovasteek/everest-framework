@@ -1,0 +1,25 @@
+{% for name, type_module in type_module.children | items %}
+pub mod {{ name }} {
+{% include "type_module" %}
+}
+{% endfor %}
+
+{% for object in type_module.objects %}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct {{ object.name }} {
+{% for p in object.properties %}
+/// {{ p.description }}
+pub {{ p.name }}: {{ p.data_type }},
+{% endfor %}
+}
+{% endfor %}
+
+{% for enum in type_module.enums %}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum {{ enum.name }} {
+{% for item in enum.items %}
+{{ item }},
+{% endfor %}
+}
+
+{% endfor %}
