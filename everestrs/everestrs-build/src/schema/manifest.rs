@@ -10,6 +10,10 @@ pub struct Manifest {
     #[serde(default)]
     pub requires: BTreeMap<String, RequiresEntry>,
     pub metadata: Metadata,
+
+    // This is just here, so that we do not crash for deny_unknown_fields, this is never used in
+    // Rust code.
+    #[allow(dead_code)]
     enable_external_mqtt: bool,
 }
 

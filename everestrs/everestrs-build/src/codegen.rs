@@ -2,21 +2,70 @@ use crate::schema::{
     interface::{Argument, ObjectOptions, StringOptions, Type, Variable},
     DataTypes, Interface, Manifest,
 };
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result, anyhow};
 use convert_case::{Case, Casing};
 use minijinja::{Environment, UndefinedBehavior};
-use serde::Serialize;
-use std::collections::{BTreeMap, BTreeSet, HashSet};
+use serde::{de::DeserializeOwned, Serialize};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
 // TODO(hrapp): The generated code is not pretty and contains a lot of whitespace. Jinja has
 // features (i.e. '{% and %}') to make the whitespace better, but I have a lot of trouble applying
-// them betetr 
+// them better.
+
+// We include the JINJA templates into the binary. This has the disadvantage that every change to
+// the templates requires a recompilation, but the advantage that the codgen library/binary is
+// truly standalone and needs nothing shipped with it to work.
 const SERVICE_JINJA: &str = include_str!("../jinja/service.jinja2");
 const CLIENT_JINJA: &str = include_str!("../jinja/client.jinja2");
 const MODULE_JINJA: &str = include_str!("../jinja/module.jinja2");
 const TYPE_MODULE: &str = include_str!("../jinja/type_module.jinja2");
+
+fn parse_yaml<T: DeserializeOwned>(everest_core: &Path, subdir: &str, name: &str) -> Result<T> {
+    let p = everest_core.join(format!("{subdir}/{name}.yaml"));
+    let blob = fs::read_to_string(&p).with_context(|| format!("Reading {p:?}"))?;
+    serde_yaml::from_str(&blob).with_context(|| format!("Parsing {p:?}"))
+}
+
+// A lazy loader for YAML files. If the same file is requested twice, it will not be reparsed
+// again.
+#[derive(Default, Debug)]
+struct YamlRepo {
+    everest_core: PathBuf,
+    interfaces: HashMap<String, Interface>,
+    data_types: HashMap<String, DataTypes>,
+}
+
+impl YamlRepo {
+    pub fn new(everest_core: PathBuf) -> Self {
+        Self {
+            everest_core,
+            ..Default::default()
+        }
+    }
+    pub fn get_interface<'a>(&'a mut self, name: &str) -> Result<&'a Interface> {
+        if self.interfaces.contains_key(name) {
+            return Ok(self.interfaces.get(name).unwrap());
+        }
+        self.interfaces.insert(
+            name.to_string(),
+            parse_yaml(&self.everest_core, "interfaces", name)?,
+        );
+        self.get_interface(name)
+    }
+
+    pub fn get_data_types<'a>(&'a mut self, name: &str) -> Result<&'a DataTypes> {
+        if self.data_types.contains_key(name) {
+            return Ok(self.data_types.get(name).unwrap());
+        }
+        self.data_types.insert(
+            name.to_string(),
+            parse_yaml(&self.everest_core, "types", name)?,
+        );
+        self.get_data_types(name)
+    }
+}
 
 // We just pull out of ObjectOptions what we really need for codegen.
 #[derive(Debug, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
@@ -27,34 +76,40 @@ struct TypeRef {
 }
 
 impl TypeRef {
-    pub fn from_object(args: &ObjectOptions) -> Self {
+    pub fn from_object(args: &ObjectOptions) -> Result<Self> {
         assert!(args.object_reference.is_some());
         assert!(
             args.properties.is_empty(),
             "Found an object with $ref, but also with properties. Cannot handle that case."
         );
-        Self::from_reference(&args.object_reference.as_ref().unwrap())
+        Self::from_reference(args.object_reference.as_ref().unwrap())
     }
 
-    pub fn from_string(args: &StringOptions) -> Self {
+    pub fn from_string(args: &StringOptions) -> Result<Self> {
         assert!(args.object_reference.is_some());
-        Self::from_reference(&args.object_reference.as_ref().unwrap())
+        Self::from_reference(args.object_reference.as_ref().unwrap())
     }
 
-    fn from_reference(r: &str) -> Self {
-        let mut it = r.trim_start_matches('/').split("#/");
-        // TODO(hrapp): This should do some error handling.
-        let module_name = it.next().unwrap().to_string();
+    pub fn reference(&self) -> String {
+        format!("/{}#/{}", self.module_path.join("/"), self.type_name)
+    }
+
+    fn from_reference(r: &str) -> Result<Self> {
+        let parts: Vec<_> = r.trim_start_matches('/').split("#/").collect();
+        if parts.len() != 2 {
+            bail!("Unexpected type reference: {}", r);
+        }
+        let module_name = parts[0].to_string();
         let module_path = module_name.split('/').map(|s| s.to_string()).collect();
-        let type_name = it.next().unwrap().to_string();
-        Self {
+        let type_name = parts[1].to_string();
+        Ok(Self {
             module_path,
             type_name,
-        }
+        })
     }
 
     pub fn module_name(&self) -> String {
-        format!("::crate::generated::types::{}", self.module_path.join("::"),)
+        format!("crate::generated::types::{}", self.module_path.join("::"),)
     }
 
     pub fn absolute_type_path(&self) -> String {
@@ -62,17 +117,17 @@ impl TypeRef {
     }
 }
 
-fn as_typename(arg: &Argument, type_refs: &mut BTreeSet<TypeRef>) -> String {
+fn as_typename(arg: &Argument, type_refs: &mut BTreeSet<TypeRef>) -> Result<String> {
     use Argument::*;
     use Type::*;
-    match arg {
+    Ok(match arg {
         Single(Null) => "()".to_string(),
         Single(Boolean) => "bool".to_string(),
         Single(String(args)) => {
             if args.object_reference.is_none() {
                 "String".to_string()
             } else {
-                let t = TypeRef::from_string(args);
+                let t = TypeRef::from_string(args)?;
                 let name = t.absolute_type_path();
                 type_refs.insert(t);
                 name
@@ -84,7 +139,7 @@ fn as_typename(arg: &Argument, type_refs: &mut BTreeSet<TypeRef>) -> String {
             if args.object_reference.is_none() {
                 "::serde_json::Value".to_string()
             } else {
-                let t = TypeRef::from_object(args);
+                let t = TypeRef::from_object(args)?;
                 let name = t.absolute_type_path();
                 type_refs.insert(t);
                 name
@@ -93,12 +148,12 @@ fn as_typename(arg: &Argument, type_refs: &mut BTreeSet<TypeRef>) -> String {
         Single(Array(args)) => match args.items {
             None => "Vec<::serde_json::Value>".to_string(),
             Some(ref v) => {
-                let item_type = as_typename(&v.arg, type_refs);
+                let item_type = as_typename(&v.arg, type_refs)?;
                 format!("Vec<{item_type}>")
             }
         },
         Multiple(_) => "::serde_json::Value".to_string(),
-    }
+    })
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -109,12 +164,16 @@ struct ArgumentContext {
 }
 
 impl ArgumentContext {
-    pub fn from_schema(name: String, var: Variable, type_refs: &mut BTreeSet<TypeRef>) -> Self {
-        ArgumentContext {
+    pub fn from_schema(
+        name: String,
+        var: &Variable,
+        type_refs: &mut BTreeSet<TypeRef>,
+    ) -> Result<Self> {
+        Ok(ArgumentContext {
             name,
-            description: var.description,
-            data_type: as_typename(&var.arg, type_refs),
-        }
+            description: var.description.clone(),
+            data_type: as_typename(&var.arg, type_refs)?,
+        })
     }
 }
 
@@ -129,21 +188,26 @@ struct CommandContext {
 impl CommandContext {
     pub fn from_schema(
         name: String,
-        cmd: crate::schema::interface::Command,
+        cmd: &crate::schema::interface::Command,
         type_refs: &mut BTreeSet<TypeRef>,
-    ) -> Self {
-        CommandContext {
-            name,
-            description: cmd.description,
-            result: cmd.result.map(|arg| {
-                ArgumentContext::from_schema("return_value".to_string(), arg, type_refs)
-            }),
-            arguments: cmd
-                .arguments
-                .into_iter()
-                .map(|(name, arg)| ArgumentContext::from_schema(name, arg, type_refs))
-                .collect(),
+    ) -> Result<Self> {
+        let mut arguments = Vec::new();
+        for (name, arg) in &cmd.arguments {
+            arguments.push(ArgumentContext::from_schema(name.clone(), arg, type_refs)?);
         }
+        Ok(CommandContext {
+            name,
+            description: cmd.description.clone(),
+            result: match &cmd.result {
+                None => None,
+                Some(arg) => Some(ArgumentContext::from_schema(
+                    "return_value".to_string(),
+                    arg,
+                    type_refs,
+                )?),
+            },
+            arguments,
+        })
     }
 }
 
@@ -157,28 +221,24 @@ struct InterfaceContext {
 
 impl InterfaceContext {
     pub fn from_yaml(
-        everest_core: &Path,
+        yaml_repo: &mut YamlRepo,
         name: &str,
         type_refs: &mut BTreeSet<TypeRef>,
     ) -> Result<Self> {
-        let p = everest_core.join(format!("interfaces/{}.yaml", name));
-        let blob = fs::read_to_string(&p).with_context(|| format!("Reading {p:?}"))?;
-        let interface_yaml: Interface =
-            serde_yaml::from_str(&blob).with_context(|| format!("While parsing {p:?}"))?;
-
+        let interface_yaml = yaml_repo.get_interface(name)?;
+        let mut vars = Vec::new();
+        for (name, var) in &interface_yaml.vars {
+            vars.push(ArgumentContext::from_schema(name.clone(), var, type_refs)?);
+        }
+        let mut cmds = Vec::new();
+        for (name, cmd) in &interface_yaml.cmds {
+            cmds.push(CommandContext::from_schema(name.clone(), cmd, type_refs)?);
+        }
         Ok(InterfaceContext {
             name: name.to_string(),
-            description: interface_yaml.description,
-            vars: interface_yaml
-                .vars
-                .into_iter()
-                .map(|(name, var)| ArgumentContext::from_schema(name, var, type_refs))
-                .collect(),
-            cmds: interface_yaml
-                .cmds
-                .into_iter()
-                .map(|(name, cmd)| CommandContext::from_schema(name, cmd, type_refs))
-                .collect(),
+            description: interface_yaml.description.clone(),
+            vars,
+            cmds,
         })
     }
 }
@@ -210,25 +270,23 @@ enum TypeContext {
 
 fn type_context_from_ref(
     r: &TypeRef,
-    everest_core: &Path,
+    yaml_repo: &mut YamlRepo,
     type_refs: &mut BTreeSet<TypeRef>,
 ) -> Result<TypeContext> {
     use Argument::*;
     use Type::*;
 
-    let p = everest_core.join(format!("types/{}.yaml", r.module_path.join("/")));
-    let blob = fs::read_to_string(&p).with_context(|| format!("Reading {p:?}"))?;
-    let data_types_yaml: DataTypes =
-        serde_yaml::from_str(&blob).with_context(|| format!("While parsing {p:?}"))?;
+    let data_types_yaml = yaml_repo.get_data_types(&r.module_path.join("/"))?;
 
-    // TODO(hrapp): This should do some error checking.
-    let type_descr = data_types_yaml.types.get(&r.type_name).unwrap();
+    let type_descr = data_types_yaml.types.get(&r.type_name).ok_or_else(|| {
+        anyhow!("Unable to find data type {}. Is it defined?", r.reference())
+    })?;
     match &type_descr.arg {
         Single(Object(args)) => {
             let mut properties = Vec::new();
             for (name, var) in &args.properties {
                 let data_type = {
-                    let d = as_typename(&var.arg, type_refs);
+                    let d = as_typename(&var.arg, type_refs)?;
                     if !args.required.contains(name) {
                         format!("Option<{}>", d)
                     } else {
@@ -288,7 +346,7 @@ fn snake_case(arg: String) -> String {
 }
 
 fn handle_implementations(
-    everest_core: &Path,
+    yaml_repo: &mut YamlRepo,
     entries: impl Iterator<Item = (String, String)>,
     type_refs: &mut BTreeSet<TypeRef>,
 ) -> Result<(Vec<InterfaceContext>, Vec<SlotContext>)> {
@@ -296,7 +354,7 @@ fn handle_implementations(
     let mut unique_interfaces = Vec::new();
     let mut seen_interfaces = HashSet::new();
     for (implementation_id, interface) in entries {
-        let interface_context = InterfaceContext::from_yaml(&everest_core, &interface, type_refs)?;
+        let interface_context = InterfaceContext::from_yaml(yaml_repo, &interface, type_refs)?;
 
         if !seen_interfaces.contains(&interface) {
             unique_interfaces.push(interface_context);
@@ -312,6 +370,7 @@ fn handle_implementations(
 }
 
 pub fn emit(manifest_path: PathBuf, everest_core: PathBuf) -> Result<String> {
+    let mut yaml_repo = YamlRepo::new(everest_core);
     let blob = fs::read_to_string(&manifest_path).context("reading manifest file")?;
     let manifest: Manifest = serde_yaml::from_str(&blob).context("While parsing manifest")?;
 
@@ -326,7 +385,7 @@ pub fn emit(manifest_path: PathBuf, everest_core: PathBuf) -> Result<String> {
 
     let mut type_refs = BTreeSet::new();
     let (provided_interfaces, provides) = handle_implementations(
-        &everest_core,
+        &mut yaml_repo,
         manifest
             .provides
             .into_iter()
@@ -334,7 +393,7 @@ pub fn emit(manifest_path: PathBuf, everest_core: PathBuf) -> Result<String> {
         &mut type_refs,
     )?;
     let (required_interfaces, requires) = handle_implementations(
-        &everest_core,
+        &mut yaml_repo,
         manifest
             .requires
             .into_iter()
@@ -353,13 +412,9 @@ pub fn emit(manifest_path: PathBuf, everest_core: PathBuf) -> Result<String> {
             }
             let mut module = &mut type_module_root;
             for p in &t.module_path {
-                // TODO(hrapp): Cloning is not really necessary, this could use &str instead of
-                // String
                 module = module.children.entry(p.clone()).or_default();
             }
-            // TODO(hrapp): this reparses the same yamls over and over again. instead, I should
-            // parse the whole subtree and build a hashmap from ref to description
-            match type_context_from_ref(t, &everest_core, &mut new)? {
+            match type_context_from_ref(t, &mut yaml_repo, &mut new)? {
                 TypeContext::Object(item) => module.objects.push(item),
                 TypeContext::Enum(item) => module.enums.push(item),
             }

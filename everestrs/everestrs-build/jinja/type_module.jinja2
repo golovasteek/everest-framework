@@ -5,17 +5,18 @@ pub mod {{ name }} {
 {% endfor %}
 
 {% for object in type_module.objects %}
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct {{ object.name }} {
 {% for p in object.properties %}
 /// {{ p.description | replace("\n", " ") }}
-pub {{ p.name }}: {{ p.data_type }},
+#[serde(rename="{{ p.name }}")]
+pub {{ p.name | snake }}: {{ p.data_type }},
 {% endfor %}
 }
 {% endfor %}
 
 {% for enum in type_module.enums %}
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum {{ enum.name }} {
 {% for item in enum.items %}
 {{ item }},

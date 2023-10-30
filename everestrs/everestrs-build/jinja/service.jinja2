@@ -13,7 +13,7 @@ pub(crate) trait {{trait.name | title}}ServiceSubscriber: Sync + Send {
    fn {{cmd.name}}(&self,
       publishers: &ModulePublisher,
    {%- for arg in cmd.arguments %}
-      {{arg.name}}: {{arg.data_type}},
+      {{arg.name | snake }}: {{arg.data_type}},
    {%- endfor %}
    ) -> ::everestrs::Result<{%- if cmd.result -%}
       {{cmd.result.data_type}}
@@ -33,7 +33,7 @@ pub(super) fn dispatch_command_to_{{ trait.name | snake }}(
 {%- for cmd in trait.cmds %}
    "{{ cmd.name }}" => {
 {%- for arg in cmd.arguments %}
-      let {{ arg.name }}: {{ arg.data_type }} = ::serde_json::from_value(
+      let {{ arg.name | snake }}: {{ arg.data_type }} = ::serde_json::from_value(
          parameters.remove("{{ arg.name }}")
             .ok_or(::everestrs::Error::MissingArgument("{{ arg.name }}"))?,
           )
@@ -41,7 +41,7 @@ pub(super) fn dispatch_command_to_{{ trait.name | snake }}(
 {%- endfor %}
        let retval = service.{{ cmd.name }}(publishers, 
 {%- for arg in cmd.arguments %}
-            {{ arg.name }},
+            {{ arg.name | snake }},
 {%- endfor %}
        )?;
        Ok(retval.into())
@@ -59,8 +59,8 @@ pub(crate) struct {{trait.name | title }}ServicePublisher {
 
 impl {{trait.name | title }}ServicePublisher {
 {% for var in trait.vars %}
-   pub(crate) fn {{ var.name }}(&self, value: {{ var.data_type }}) -> ::everestrs::Result<()> {
-      self.runtime.publish_variable(self.implementation_id, "{{ var.name }} ", &value);
+   pub(crate) fn {{ var.name | snake }}(&self, value: {{ var.data_type }}) -> ::everestrs::Result<()> {
+      self.runtime.publish_variable(self.implementation_id, "{{ var.name }}", &value);
       Ok(())
    }
 {% endfor %}
