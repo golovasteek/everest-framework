@@ -106,8 +106,8 @@ impl<'de> Deserialize<'de> for Variable {
         D: Deserializer<'de>,
     {
         let serde_json::Value::Object(mut map) = Deserialize::deserialize(deserializer)? else {
-return Err(serde::de::Error::custom("Variable must be a mapping"));
-};
+            return Err(serde::de::Error::custom("Variable must be a mapping"));
+        };
 
         let description: Option<String> = match map.remove("description") {
             None => None,

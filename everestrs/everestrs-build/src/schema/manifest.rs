@@ -1,6 +1,6 @@
+use crate::schema::interface::Variable;
 use serde::Deserialize;
 use std::collections::BTreeMap;
-use crate::schema::interface::Variable;
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]

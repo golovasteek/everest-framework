@@ -14,10 +14,7 @@ pub struct Builder {
 }
 
 impl Builder {
-    pub fn new(
-        manifest_path: impl Into<PathBuf>,
-        everest_core: impl Into<PathBuf>,
-    ) -> Self {
+    pub fn new(manifest_path: impl Into<PathBuf>, everest_core: impl Into<PathBuf>) -> Self {
         Self {
             everest_core: everest_core.into(),
             manifest_path: manifest_path.into(),

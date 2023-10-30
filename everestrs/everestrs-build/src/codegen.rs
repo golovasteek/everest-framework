@@ -2,7 +2,7 @@ use crate::schema::{
     interface::{Argument, ObjectOptions, StringOptions, Type, Variable},
     DataTypes, Interface, Manifest,
 };
-use anyhow::{bail, Context, Result, anyhow};
+use anyhow::{anyhow, bail, Context, Result};
 use convert_case::{Case, Casing};
 use minijinja::{Environment, UndefinedBehavior};
 use serde::{de::DeserializeOwned, Serialize};
@@ -278,9 +278,10 @@ fn type_context_from_ref(
 
     let data_types_yaml = yaml_repo.get_data_types(&r.module_path.join("/"))?;
 
-    let type_descr = data_types_yaml.types.get(&r.type_name).ok_or_else(|| {
-        anyhow!("Unable to find data type {}. Is it defined?", r.reference())
-    })?;
+    let type_descr = data_types_yaml
+        .types
+        .get(&r.type_name)
+        .ok_or_else(|| anyhow!("Unable to find data type {}. Is it defined?", r.reference()))?;
     match &type_descr.arg {
         Single(Object(args)) => {
             let mut properties = Vec::new();
