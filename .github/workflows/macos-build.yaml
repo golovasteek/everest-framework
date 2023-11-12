@@ -26,6 +26,11 @@ jobs:
           path: everest-dev-environment
           ref: v0.5.5
 
+      - name: Cache build
+        uses: actions/cache@v3
+        with:
+          path: ${{github.workspace}}/build
+
       - name: Install dependencies with homebrew
         run: brew install openssl@1.1 boost
 

@@ -315,7 +315,7 @@ static Napi::Value boot_module(const Napi::CallbackInfo& info) {
         // initialize everest framework
         const auto& module_identifier = config->printable_identifier(module_id);
         EVLOG_debug << "Initializing framework for module " << module_identifier << "...";
-       
+
         set_process_name(module_identifier);
 
         Everest::Logging::update_process_name(module_identifier);

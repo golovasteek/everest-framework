@@ -370,7 +370,7 @@ int ModuleLoader::initialize() {
 
         const std::string module_identifier = config.printable_identifier(this->module_id);
         EVLOG_debug << fmt::format("Initializing framework for module {}...", module_identifier);
-        
+
         set_process_name(module_identifier);
 
         Logging::update_process_name(module_identifier);

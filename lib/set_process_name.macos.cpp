@@ -7,7 +7,7 @@
 #include <fmt/core.h>
 
 void set_process_name(const std::string& name) {
-    EVLOG_verbose << fmt::format("Setting process name to: '{}'...", name);    
+    EVLOG_verbose << fmt::format("Setting process name to: '{}'...", name);
 
     EVLOG_warning << fmt::format("Could not set process name to '{}'. Not supported on macos", name);
 }
