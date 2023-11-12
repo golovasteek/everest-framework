@@ -1,7 +1,7 @@
 if (APPLE)
     set(OS_SPECIFIC_FILES "create_pipe.macos.cpp")
 else ()
-    set(OS_SPECIFIC_FILES "create_pipe.unix.cpp")
+    set(OS_SPECIFIC_FILES "create_pipe.linux.cpp")
 endif ()
 
 add_executable(manager 
