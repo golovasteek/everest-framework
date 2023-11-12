@@ -44,5 +44,5 @@ jobs:
             -DLWS_OPENSSL_LIBRARIES="/usr/local/opt/openssl@1.1/lib/libcrypto.dylib;/usr/local/opt/openssl@1.1/lib/libssl.dylib" \
             -DLWS_OPENSSL_INCLUDE_DIRS="/usr/local/opt/openssl@1.1/include" \
             -DEVEREST_ENABLE_JS_SUPPORT=OFF \
-            -DEVEREST_ENABLE_RS_SUPPORT=ON \
+            -DEVEREST_ENABLE_RS_SUPPORT=ON
           make -j2
