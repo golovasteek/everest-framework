@@ -5,6 +5,7 @@
 
 #include <framework/everest.hpp>
 #include <framework/runtime.hpp>
+#include <utils/set_process_name.hpp>
 
 #include <napi.h>
 
