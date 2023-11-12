@@ -6,6 +6,7 @@
 #include <fmt/format.h>
 #include <stdexcept>
 #include <unistd.h>
+#include <fcntl.h>
 
 void create_pipe(int* pipefd) {
     if (pipe2(pipefd, O_CLOEXEC | O_DIRECT)) {
