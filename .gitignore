@@ -4,3 +4,6 @@
 target
 watcher.lua
 workspace.yaml
+
+# Clang
+.cache/

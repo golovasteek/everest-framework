@@ -39,6 +39,8 @@ properties:
         type: string
       types_dir:
         type: string
+      errors_dir:
+        type: string
       www_dir:
         type: string
       logging_config_file:
@@ -58,6 +60,8 @@ properties:
       telemetry_prefix:
         type: string
       telemetry_enabled:
+        type: boolean
+      validate_schema:
         type: boolean
     additionalProperties: false
   active_modules:
