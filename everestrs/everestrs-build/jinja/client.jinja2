@@ -27,7 +27,7 @@ pub(super) fn dispatch_variable_to_{{ trait.name | snake }}(
 #[derive(Clone)]
 pub(crate) struct {{trait.name | title }}ClientPublisher {
     implementation_id: &'static str,
-    runtime: ::std::sync::Arc<::everestrs::Runtime>,
+    runtime: ::std::pin::Pin<::std::sync::Arc<::everestrs::Runtime>>,
 }
 
 impl {{trait.name | title }}ClientPublisher {

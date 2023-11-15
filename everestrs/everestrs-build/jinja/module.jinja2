@@ -52,7 +52,7 @@ impl Module {
       {{ require.implementation_id }}: ::std::sync::Arc<dyn {{require.interface | title}}ClientSubscriber>,
 {% endfor %}
     ) -> ::std::sync::Arc<Self> {
-        let runtime = ::std::sync::Arc::new(::everestrs::Runtime::new());
+        let runtime = ::everestrs::Runtime::new();
         let this = ::std::sync::Arc::new(Self {
             on_ready,
 {% for provide in provides %}
@@ -77,7 +77,7 @@ impl Module {
             },
         });
 
-        runtime.set_subscriber(::std::sync::Arc::<Module>::downgrade(&this));
+        runtime.as_ref().set_subscriber(::std::sync::Arc::<Module>::downgrade(&this));
         this
     }
 }
