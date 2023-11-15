@@ -40,18 +40,21 @@ target_link_libraries(controller
 
 target_compile_features(controller PRIVATE cxx_std_17)
 
-if (NOT NO_FETCH_CONTENT)
+install(TARGETS controller RUNTIME)
+
+if (EVEREST_INSTALL_ADMIN_PANEL)
     include(FetchContent)
-    message(STATUS "Fetching everest-admin-panel")
+
+    message(STATUS "Adding admin-panel")
+
     FetchContent_Declare(admin-panel
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
         URL https://github.com/EVerest/everest-admin-panel/releases/download/v0.1.0/everest-admin-panel.tar.gz
     )
-    FetchContent_Populate(admin-panel)
+
+    FetchContent_MakeAvailable(admin-panel)
     install(
         DIRECTORY ${admin-panel_SOURCE_DIR}/
         DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/everest/www"
     )
 endif ()
-
-install(TARGETS controller RUNTIME)
