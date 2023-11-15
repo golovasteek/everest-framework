@@ -4,6 +4,7 @@ mod schema;
 use anyhow::{Context, Result};
 use std::io::Write;
 use std::path::PathBuf;
+use std::process::Command;
 
 #[derive(Debug, Default)]
 pub struct Builder {
@@ -35,8 +36,12 @@ impl Builder {
 
         let out = codegen::emit(self.manifest_path, self.everest_core)?;
 
-        let mut f = std::fs::File::create(path).context("Could not generate the output file.")?;
+        let mut f = std::fs::File::create(&path).context("Could not generate the output file.")?;
         f.write_all(out.as_bytes())?;
+
+        if let Err(_) = Command::new("rustfmt").args(path.to_str()).output() {
+            println!("Failed to format code");
+        }
         Ok(())
     }
 }

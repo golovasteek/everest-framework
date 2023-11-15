@@ -25,5 +25,6 @@ pub fn main() -> Result<()> {
     Builder::new(args.manifest, args.everest_core)
         .out_dir(args.out_dir)
         .generate()?;
+
     Ok(())
 }

@@ -1,5 +1,6 @@
 use crate::schema::{
     interface::{Argument, ObjectOptions, StringOptions, Type, Variable},
+    manifest::ConfigEntry,
     DataTypes, Interface, Manifest,
 };
 use anyhow::{anyhow, bail, Context, Result};
@@ -10,17 +11,14 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-// TODO(hrapp): The generated code is not pretty and contains a lot of whitespace. Jinja has
-// features (i.e. '{% and %}') to make the whitespace better, but I have a lot of trouble applying
-// them better.
-
-// We include the JINJA templates into the binary. This has the disadvantage that every change to
-// the templates requires a recompilation, but the advantage that the codgen library/binary is
-// truly standalone and needs nothing shipped with it to work.
+// We include the JINJA templates into the binary. This has the disadvantage
+// that every change to the templates requires a recompilation, but the
+// advantage that the codegen library/binary is truly standalone and needs
+// nothing shipped with it to work.
 const SERVICE_JINJA: &str = include_str!("../jinja/service.jinja2");
 const CLIENT_JINJA: &str = include_str!("../jinja/client.jinja2");
 const MODULE_JINJA: &str = include_str!("../jinja/module.jinja2");
-const TYPE_MODULE: &str = include_str!("../jinja/type_module.jinja2");
+const TYPE_MODULE: &str = include_str!("../jinja/types.jinja2");
 
 fn parse_yaml<T: DeserializeOwned>(everest_core: &Path, subdir: &str, name: &str) -> Result<T> {
     let p = everest_core.join(format!("{subdir}/{name}.yaml"));
@@ -28,8 +26,8 @@ fn parse_yaml<T: DeserializeOwned>(everest_core: &Path, subdir: &str, name: &str
     serde_yaml::from_str(&blob).with_context(|| format!("Parsing {p:?}"))
 }
 
-// A lazy loader for YAML files. If the same file is requested twice, it will not be reparsed
-// again.
+/// A lazy loader for YAML files. If the same file is requested twice, it will
+/// not be re-parsed again.
 #[derive(Default, Debug)]
 struct YamlRepo {
     everest_core: PathBuf,
@@ -328,6 +326,12 @@ struct SlotContext {
 }
 
 #[derive(Debug, Clone, Serialize)]
+struct ConfigContext {
+    name: String,
+    config: Vec<ArgumentContext>,
+}
+
+#[derive(Debug, Clone, Serialize)]
 struct RenderContext {
     /// The interfaces the user will need to fill in.
     provided_interfaces: Vec<InterfaceContext>,
@@ -336,6 +340,8 @@ struct RenderContext {
     provides: Vec<SlotContext>,
     requires: Vec<SlotContext>,
     type_module: TypeModuleContext,
+    module_config: Vec<ArgumentContext>,
+    provided_config: Vec<ConfigContext>,
 }
 
 fn title_case(arg: String) -> String {
@@ -370,6 +376,56 @@ fn handle_implementations(
     Ok((unique_interfaces, implementations))
 }
 
+/// Converts the config data read from yaml and generates the context for Jinja.
+///
+/// The config data contains the config name (key) and the config data (value).
+/// We use the value to derive the type and the (optional) description.
+fn emit_config(config: BTreeMap<String, ConfigEntry>) -> Vec<ArgumentContext> {
+    config
+        .into_iter()
+        .map(|(k, v)| match v {
+            ConfigEntry::Boolean {
+                description,
+                default: _,
+            } => ArgumentContext {
+                name: k,
+                description,
+                data_type: "bool".to_string(),
+            },
+            ConfigEntry::Integer {
+                description,
+                default: _,
+                minimum: _,
+                maximum: _,
+            } => ArgumentContext {
+                name: k,
+                description,
+                data_type: "i64".to_string(),
+            },
+            ConfigEntry::Number {
+                description,
+                default: _,
+                minimum: _,
+                maximum: _,
+            } => ArgumentContext {
+                name: k,
+                description,
+                data_type: "f64".to_string(),
+            },
+            ConfigEntry::String {
+                description,
+                default: _,
+                max_length: _,
+                min_length: _,
+            } => ArgumentContext {
+                name: k,
+                description,
+                data_type: "String".to_string(),
+            },
+        })
+        .collect::<Vec<_>>()
+}
+
 pub fn emit(manifest_path: PathBuf, everest_core: PathBuf) -> Result<String> {
     let mut yaml_repo = YamlRepo::new(everest_core);
     let blob = fs::read_to_string(&manifest_path).context("reading manifest file")?;
@@ -383,6 +439,16 @@ pub fn emit(manifest_path: PathBuf, everest_core: PathBuf) -> Result<String> {
     env.add_template("service", SERVICE_JINJA)?;
     env.add_template("client", CLIENT_JINJA)?;
     env.add_template("type_module", TYPE_MODULE)?;
+
+    let provided_config = manifest
+        .provides
+        .iter()
+        .filter(|(_, data)| !data.config.is_empty())
+        .map(|(name, data)| ConfigContext {
+            name: name.clone(),
+            config: emit_config(data.config.clone()),
+        })
+        .collect::<Vec<_>>();
 
     let mut type_refs = BTreeSet::new();
     let (provided_interfaces, provides) = handle_implementations(
@@ -424,12 +490,16 @@ pub fn emit(manifest_path: PathBuf, everest_core: PathBuf) -> Result<String> {
         type_refs.extend(new.into_iter());
     }
 
+    let module_config = emit_config(manifest.config);
+
     let context = RenderContext {
         provided_interfaces,
         required_interfaces,
         provides,
         requires,
         type_module: type_module_root,
+        module_config,
+        provided_config,
     };
     let tmpl = env.get_template("module").unwrap();
     Ok(tmpl.render(context).unwrap())
