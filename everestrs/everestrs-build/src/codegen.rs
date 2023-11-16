@@ -15,10 +15,11 @@ use std::path::{Path, PathBuf};
 // that every change to the templates requires a recompilation, but the
 // advantage that the codegen library/binary is truly standalone and needs
 // nothing shipped with it to work.
-const SERVICE_JINJA: &str = include_str!("../jinja/service.jinja2");
 const CLIENT_JINJA: &str = include_str!("../jinja/client.jinja2");
+const CONFIG_JINJA: &str = include_str!("../jinja/config.jinja2");
 const MODULE_JINJA: &str = include_str!("../jinja/module.jinja2");
-const TYPE_MODULE: &str = include_str!("../jinja/types.jinja2");
+const SERVICE_JINJA: &str = include_str!("../jinja/service.jinja2");
+const TYPES_JINJA: &str = include_str!("../jinja/types.jinja2");
 
 fn parse_yaml<T: DeserializeOwned>(everest_core: &Path, subdir: &str, name: &str) -> Result<T> {
     let p = everest_core.join(format!("{subdir}/{name}.yaml"));
@@ -435,10 +436,11 @@ pub fn emit(manifest_path: PathBuf, everest_core: PathBuf) -> Result<String> {
     env.set_undefined_behavior(UndefinedBehavior::Strict);
     env.add_filter("title", title_case);
     env.add_filter("snake", snake_case);
+    env.add_template("client", CLIENT_JINJA)?;
+    env.add_template("config", CONFIG_JINJA)?;
     env.add_template("module", MODULE_JINJA)?;
     env.add_template("service", SERVICE_JINJA)?;
-    env.add_template("client", CLIENT_JINJA)?;
-    env.add_template("type_module", TYPE_MODULE)?;
+    env.add_template("types", TYPES_JINJA)?;
 
     let provided_config = manifest
         .provides

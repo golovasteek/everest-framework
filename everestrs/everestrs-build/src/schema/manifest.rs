@@ -21,12 +21,6 @@ pub struct Manifest {
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct YamlData {
-    pub description: String,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct ProvidesEntry {
     pub interface: String,
     pub description: String,
