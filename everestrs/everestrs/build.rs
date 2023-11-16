@@ -95,9 +95,9 @@ fn find_libs(root: &Path) -> Libraries {
 }
 
 fn main() {
-    let root = find_everest_workspace_root();
-    let libs = find_libs(&root);
+    // let root = find_everest_workspace_root();
+    // let libs = find_libs(&root);
 
-    print_link_options(&libs.everestrs_sys);
-    print_link_options(&libs.framework);
+    // print_link_options(&libs.everestrs_sys);
+    // print_link_options(&libs.framework);
 }
