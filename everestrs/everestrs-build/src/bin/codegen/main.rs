@@ -8,7 +8,7 @@ use std::path::PathBuf;
 struct Args {
     /// path to everest-core.
     #[argh(option)]
-    pub everest_core: PathBuf,
+    pub everest_core: Vec<PathBuf>,
 
     /// manifest to generate code for
     #[argh(option)]

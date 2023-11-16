@@ -8,16 +8,19 @@ use std::process::Command;
 
 #[derive(Debug, Default)]
 pub struct Builder {
-    everest_core: PathBuf,
+    everest_core: Vec<PathBuf>,
     // TODO(hrapp): This is almost always the same anyways.
     manifest_path: PathBuf,
     out_dir: Option<PathBuf>,
 }
 
 impl Builder {
-    pub fn new(manifest_path: impl Into<PathBuf>, everest_core: impl Into<PathBuf>) -> Self {
+    pub fn new(manifest_path: impl Into<PathBuf>, everest_core: Vec<impl Into<PathBuf>>) -> Self {
         Self {
-            everest_core: everest_core.into(),
+            everest_core: everest_core
+                .into_iter()
+                .map(|element| element.into())
+                .collect::<Vec<_>>(),
             manifest_path: manifest_path.into(),
             ..Builder::default()
         }

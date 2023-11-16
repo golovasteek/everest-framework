@@ -31,26 +31,43 @@ fn parse_yaml<T: DeserializeOwned>(everest_core: &Path, subdir: &str, name: &str
 /// not be re-parsed again.
 #[derive(Default, Debug)]
 struct YamlRepo {
-    everest_core: PathBuf,
+    // This might be also a HashMap of "namespaces" and paths.
+    everest_core: Vec<PathBuf>,
     interfaces: HashMap<String, Interface>,
     data_types: HashMap<String, DataTypes>,
 }
 
 impl YamlRepo {
-    pub fn new(everest_core: PathBuf) -> Self {
+    pub fn new(everest_core: Vec<PathBuf>) -> Self {
         Self {
             everest_core,
             ..Default::default()
         }
     }
+
     pub fn get_interface<'a>(&'a mut self, name: &str) -> Result<&'a Interface> {
         if self.interfaces.contains_key(name) {
             return Ok(self.interfaces.get(name).unwrap());
         }
-        self.interfaces.insert(
-            name.to_string(),
-            parse_yaml(&self.everest_core, "interfaces", name)?,
+
+        // Try all possible prefixes - we for now expect that the "name" is
+        // defined exactly once.
+        let mut matches = self
+            .everest_core
+            .iter()
+            .filter_map(|core| match parse_yaml(core, "interfaces", name) {
+                Err(_) => None,
+                Ok(res) => Some(res),
+            })
+            .collect::<Vec<_>>();
+
+        assert!(
+            matches.len() == 1,
+            "The name {name} must be defined exactly once"
         );
+
+        self.interfaces
+            .insert(name.to_string(), matches.pop().unwrap());
         self.get_interface(name)
     }
 
@@ -58,10 +75,23 @@ impl YamlRepo {
         if self.data_types.contains_key(name) {
             return Ok(self.data_types.get(name).unwrap());
         }
-        self.data_types.insert(
-            name.to_string(),
-            parse_yaml(&self.everest_core, "types", name)?,
+
+        let mut matches = self
+            .everest_core
+            .iter()
+            .filter_map(|core| match parse_yaml(core, "types", name) {
+                Err(_) => None,
+                Ok(res) => Some(res),
+            })
+            .collect::<Vec<_>>();
+
+        assert!(
+            matches.len() == 1,
+            "The name {name} must be defined exactly once"
         );
+
+        self.data_types
+            .insert(name.to_string(), matches.pop().unwrap());
         self.get_data_types(name)
     }
 }
@@ -427,7 +457,7 @@ fn emit_config(config: BTreeMap<String, ConfigEntry>) -> Vec<ArgumentContext> {
         .collect::<Vec<_>>()
 }
 
-pub fn emit(manifest_path: PathBuf, everest_core: PathBuf) -> Result<String> {
+pub fn emit(manifest_path: PathBuf, everest_core: Vec<PathBuf>) -> Result<String> {
     let mut yaml_repo = YamlRepo::new(everest_core);
     let blob = fs::read_to_string(&manifest_path).context("reading manifest file")?;
     let manifest: Manifest = serde_yaml::from_str(&blob).context("While parsing manifest")?;
