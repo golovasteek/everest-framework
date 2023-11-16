@@ -340,7 +340,7 @@ struct RenderContext {
     required_interfaces: Vec<InterfaceContext>,
     provides: Vec<SlotContext>,
     requires: Vec<SlotContext>,
-    type_module: TypeModuleContext,
+    types: TypeModuleContext,
     module_config: Vec<ArgumentContext>,
     provided_config: Vec<ConfigContext>,
 }
@@ -499,7 +499,7 @@ pub fn emit(manifest_path: PathBuf, everest_core: PathBuf) -> Result<String> {
         required_interfaces,
         provides,
         requires,
-        type_module: type_module_root,
+        types: type_module_root,
         module_config,
         provided_config,
     };

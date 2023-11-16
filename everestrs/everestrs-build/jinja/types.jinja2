@@ -1,10 +1,10 @@
-{% for name, type_module in type_module.children | items %}
+{% for name, type_module in types.children | items %}
 pub mod {{ name }} {
 {% include "type_module" %}
 }
 {% endfor %}
 
-{% for object in type_module.objects %}
+{% for object in types.objects %}
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct {{ object.name }} {
 {% for p in object.properties %}
@@ -15,7 +15,7 @@ pub {{ p.name | snake }}: {{ p.data_type }},
 }
 {% endfor %}
 
-{% for enum in type_module.enums %}
+{% for enum in types.enums %}
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum {{ enum.name }} {
 {% for item in enum.items %}
