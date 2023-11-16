@@ -1,6 +1,6 @@
-{% for name, type_module in types.children | items %}
+{% for name, types in types.children | items %}
 pub mod {{ name }} {
-{% include "type_module" %}
+{% include "types" %}
 }
 {% endfor %}
 
