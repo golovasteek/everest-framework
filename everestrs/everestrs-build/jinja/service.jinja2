@@ -23,7 +23,7 @@ pub(crate) trait {{trait.name | title}}ServiceSubscriber: Sync + Send {
 {% endfor %}
 }
 
-pub(super) fn dispatch_command_to_{{ trait.name | snake }}(
+fn dispatch_command_to_{{ trait.name | snake }}(
    publishers: &ModulePublisher,
    service: &dyn {{trait.name | title}}ServiceSubscriber,
    name: &str,
