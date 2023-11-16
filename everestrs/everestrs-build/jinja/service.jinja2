@@ -44,7 +44,7 @@ pub(super) fn dispatch_command_to_{{ trait.name | snake }}(
             {{ arg.name | snake }},
 {%- endfor %}
        )?;
-       Ok(retval.into())
+       serde_json::to_value(retval).map_err(|e| ::everestrs::Error::MismatchedType("Failed to dispacth".to_string()))
     },
 {%- endfor %}
       _ => Err(::everestrs::Error::InvalidArgument("Unknown command called.")),
