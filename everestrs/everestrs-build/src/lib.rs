@@ -1,5 +1,5 @@
 mod codegen;
-mod schema;
+pub mod schema;
 
 use anyhow::{Context, Result};
 use std::io::Write;

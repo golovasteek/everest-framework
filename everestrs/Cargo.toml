@@ -4,3 +4,6 @@ members = [
    "everestrs",
    "everestrs-build",
 ]
+
+[workspace.dependencies]
+everestrs-build = { path="everestrs-build" }

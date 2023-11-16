@@ -59,15 +59,15 @@ pub enum ConfigEntry {
     Integer {
         #[allow(dead_code)]
         description: Option<String>,
-        default: Option<i32>,
-        minimum: Option<i32>,
-        maximum: Option<i32>,
+        default: Option<i64>,
+        minimum: Option<i64>,
+        maximum: Option<i64>,
     },
     Number {
         #[allow(dead_code)]
         description: Option<String>,
-        minimum: Option<f32>,
-        default: Option<f32>,
-        maximum: Option<f32>,
+        minimum: Option<f64>,
+        default: Option<f64>,
+        maximum: Option<f64>,
     },
 }

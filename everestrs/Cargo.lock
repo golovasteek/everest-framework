@@ -98,6 +98,7 @@ version = "0.1.0"
 dependencies = [
  "argh",
  "cxx",
+ "everestrs-build",
  "serde",
  "serde_json",
  "thiserror",
