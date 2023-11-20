@@ -109,7 +109,7 @@ fn main() {
             println!("Split items: {:?}", include_paths);
             let include_paths: Vec<_> = include_paths
                 .iter()
-                .map(|p| std::fs::canonicalize(&p).expect(format!("Can not unwrap {:?}",p))).collect();
+                .map(|p| std::fs::canonicalize(&p).expect(format!("Can not unwrap {:?}",p).as_str())).collect();
             println!("Include paths: {:?}", include_paths);
             cxx_build::bridge("src/lib.rs")
                 .file("src/everestrs_sys.cpp")
