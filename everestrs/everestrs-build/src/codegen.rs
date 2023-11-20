@@ -1,6 +1,6 @@
 use crate::schema::{
     interface::{Argument, ObjectOptions, StringOptions, Type, Variable},
-    manifest::ConfigEntry,
+    manifest::{ConfigEntry, ConfigEnum},
     DataTypes, Interface, Manifest,
 };
 use anyhow::{anyhow, bail, Context, Result};
@@ -27,6 +27,33 @@ fn parse_yaml<T: DeserializeOwned>(everest_core: &Path, subdir: &str, name: &str
     serde_yaml::from_str(&blob).with_context(|| format!("Parsing {p:?}"))
 }
 
+fn lazy_load<'a, T: DeserializeOwned>(
+    storage: &'a mut HashMap<String, T>,
+    everest_core: &Vec<PathBuf>,
+    prefix: &str,
+    postfix: &str,
+) -> Result<&'a T> {
+    if storage.contains_key(postfix) {
+        return Ok(storage.get(postfix).unwrap());
+    }
+
+    let mut matches = everest_core
+        .iter()
+        .filter_map(|core| match parse_yaml(core, prefix, postfix) {
+            Err(_) => None,
+            Ok(res) => Some(res),
+        })
+        .collect::<Vec<_>>();
+
+    assert!(
+        matches.len() == 1,
+        "The name {postfix} must be defined exactly once"
+    );
+
+    storage.insert(postfix.to_string(), matches.pop().unwrap());
+    Ok(storage.get(postfix).unwrap())
+}
+
 /// A lazy loader for YAML files. If the same file is requested twice, it will
 /// not be re-parsed again.
 #[derive(Default, Debug)]
@@ -46,58 +73,16 @@ impl YamlRepo {
     }
 
     pub fn get_interface<'a>(&'a mut self, name: &str) -> Result<&'a Interface> {
-        if self.interfaces.contains_key(name) {
-            return Ok(self.interfaces.get(name).unwrap());
-        }
-
-        // Try all possible prefixes - we for now expect that the "name" is
-        // defined exactly once.
-        let mut matches = self
-            .everest_core
-            .iter()
-            .filter_map(|core| match parse_yaml(core, "interfaces", name) {
-                Err(_) => None,
-                Ok(res) => Some(res),
-            })
-            .collect::<Vec<_>>();
-
-        assert!(
-            matches.len() == 1,
-            "The name {name} must be defined exactly once"
-        );
-
-        self.interfaces
-            .insert(name.to_string(), matches.pop().unwrap());
-        self.get_interface(name)
+        lazy_load(&mut self.interfaces, &self.everest_core, "interfaces", name)
     }
 
     pub fn get_data_types<'a>(&'a mut self, name: &str) -> Result<&'a DataTypes> {
-        if self.data_types.contains_key(name) {
-            return Ok(self.data_types.get(name).unwrap());
-        }
-
-        let mut matches = self
-            .everest_core
-            .iter()
-            .filter_map(|core| match parse_yaml(core, "types", name) {
-                Err(_) => None,
-                Ok(res) => Some(res),
-            })
-            .collect::<Vec<_>>();
-
-        assert!(
-            matches.len() == 1,
-            "The name {name} must be defined exactly once"
-        );
-
-        self.data_types
-            .insert(name.to_string(), matches.pop().unwrap());
-        self.get_data_types(name)
+        lazy_load(&mut self.data_types, &self.everest_core, "types", name)
     }
 }
 
 // We just pull out of ObjectOptions what we really need for codegen.
-#[derive(Debug, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
 struct TypeRef {
     /// The same as the file name under everest-core/types.
     module_path: Vec<String>,
@@ -105,7 +90,7 @@ struct TypeRef {
 }
 
 impl TypeRef {
-    pub fn from_object(args: &ObjectOptions) -> Result<Self> {
+    fn from_object(args: &ObjectOptions) -> Result<Self> {
         assert!(args.object_reference.is_some());
         assert!(
             args.properties.is_empty(),
@@ -114,13 +99,9 @@ impl TypeRef {
         Self::from_reference(args.object_reference.as_ref().unwrap())
     }
 
-    pub fn from_string(args: &StringOptions) -> Result<Self> {
+    fn from_string(args: &StringOptions) -> Result<Self> {
         assert!(args.object_reference.is_some());
         Self::from_reference(args.object_reference.as_ref().unwrap())
-    }
-
-    pub fn reference(&self) -> String {
-        format!("/{}#/{}", self.module_path.join("/"), self.type_name)
     }
 
     fn from_reference(r: &str) -> Result<Self> {
@@ -143,6 +124,17 @@ impl TypeRef {
 
     pub fn absolute_type_path(&self) -> String {
         format!("{}::{}", self.module_name(), self.type_name)
+    }
+}
+
+impl std::fmt::Debug for TypeRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "TypeRef /{}#/{}",
+            self.module_path.join("/"),
+            self.type_name
+        )
     }
 }
 
@@ -310,7 +302,7 @@ fn type_context_from_ref(
     let type_descr = data_types_yaml
         .types
         .get(&r.type_name)
-        .ok_or_else(|| anyhow!("Unable to find data type {}. Is it defined?", r.reference()))?;
+        .ok_or_else(|| anyhow!("Unable to find data type {:?}. Is it defined?", r))?;
     match &type_descr.arg {
         Single(Object(args)) => {
             let mut properties = Vec::new();
@@ -414,43 +406,37 @@ fn handle_implementations(
 fn emit_config(config: BTreeMap<String, ConfigEntry>) -> Vec<ArgumentContext> {
     config
         .into_iter()
-        .map(|(k, v)| match v {
-            ConfigEntry::Boolean {
-                description,
-                default: _,
-            } => ArgumentContext {
+        .map(|(k, v)| match v.value {
+            ConfigEnum::Boolean { default: _ } => ArgumentContext {
                 name: k,
-                description,
+                description: v.description,
                 data_type: "bool".to_string(),
             },
-            ConfigEntry::Integer {
-                description,
+            ConfigEnum::Integer {
                 default: _,
                 minimum: _,
                 maximum: _,
             } => ArgumentContext {
                 name: k,
-                description,
+                description: v.description,
                 data_type: "i64".to_string(),
             },
-            ConfigEntry::Number {
-                description,
+            ConfigEnum::Number {
                 default: _,
                 minimum: _,
                 maximum: _,
             } => ArgumentContext {
                 name: k,
-                description,
+                description: v.description,
                 data_type: "f64".to_string(),
             },
-            ConfigEntry::String {
-                description,
+            ConfigEnum::String {
                 default: _,
                 max_length: _,
                 min_length: _,
             } => ArgumentContext {
                 name: k,
-                description,
+                description: v.description,
                 data_type: "String".to_string(),
             },
         })
@@ -459,7 +445,7 @@ fn emit_config(config: BTreeMap<String, ConfigEntry>) -> Vec<ArgumentContext> {
 
 pub fn emit(manifest_path: PathBuf, everest_core: Vec<PathBuf>) -> Result<String> {
     let mut yaml_repo = YamlRepo::new(everest_core);
-    let blob = fs::read_to_string(&manifest_path).context("reading manifest file")?;
+    let blob = fs::read_to_string(&manifest_path).context("While reading manifest file")?;
     let manifest: Manifest = serde_yaml::from_str(&blob).context("While parsing manifest")?;
 
     let mut env = Environment::new();

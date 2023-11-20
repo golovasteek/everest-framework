@@ -42,30 +42,33 @@ pub struct Metadata {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct ConfigEntry {
+    pub description: Option<String>,
+    #[serde(flatten)]
+    pub value: ConfigEnum,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type", deny_unknown_fields)]
-pub enum ConfigEntry {
+pub enum ConfigEnum {
     Boolean {
         #[allow(dead_code)]
-        description: Option<String>,
         default: Option<bool>,
     },
     String {
         #[allow(dead_code)]
-        description: Option<String>,
         default: Option<String>,
         min_length: Option<i32>,
         max_length: Option<i32>,
     },
     Integer {
         #[allow(dead_code)]
-        description: Option<String>,
         default: Option<i64>,
         minimum: Option<i64>,
         maximum: Option<i64>,
     },
     Number {
         #[allow(dead_code)]
-        description: Option<String>,
         minimum: Option<f64>,
         default: Option<f64>,
         maximum: Option<f64>,
