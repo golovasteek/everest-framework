@@ -19,9 +19,9 @@ if (NOT EXISTS ${CXXBRIDGE_BINARY})
 endif ()
 
 set(CXXBRIDGE_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/cxxbridge)
-set(EVERESTRS_FFI_HEADER ${CXXBRIDGE_OUTPUT_DIR}/lib.rs.h)
-set(EVERESTRS_FFI_SOURCE ${CXXBRIDGE_OUTPUT_DIR}/lib.rs.cc)
-set(CXXBRIDGE_HEADER ${CXXBRIDGE_OUTPUT_DIR}/rust.h)
+set(EVERESTRS_FFI_HEADER ${CXXBRIDGE_OUTPUT_DIR}/everestrs/src/lib.rs.h)
+set(EVERESTRS_FFI_SOURCE ${CXXBRIDGE_OUTPUT_DIR}/everestrs/src/lib.rs.cc)
+set(CXXBRIDGE_HEADER ${CXXBRIDGE_OUTPUT_DIR}/rust/cxx.h)
 
 add_custom_command(
     OUTPUT
@@ -30,12 +30,14 @@ add_custom_command(
         ${EVERESTRS_FFI_SOURCE}
         ${CXXBRIDGE_HEADER}
     COMMAND
-        ${CMAKE_COMMAND} -E make_directory ${CXXBRIDGE_OUTPUT_DIR}
+        ${CMAKE_COMMAND} -E make_directory ${CXXBRIDGE_OUTPUT_DIR}/everestrs/src
+    COMMAND
+        ${CMAKE_COMMAND} -E make_directory ${CXXBRIDGE_OUTPUT_DIR}/rust
     COMMAND
         ${CXXBRIDGE_BINARY} --header -o ${CXXBRIDGE_HEADER}
     COMMAND
         ${CXXBRIDGE_BINARY} ${CMAKE_CURRENT_SOURCE_DIR}/everestrs/src/lib.rs --header -o ${EVERESTRS_FFI_HEADER}
-    COMMAND
+    COMMAND    
         ${CXXBRIDGE_BINARY} ${CMAKE_CURRENT_SOURCE_DIR}/everestrs/src/lib.rs -o ${EVERESTRS_FFI_SOURCE}
     DEPENDS
         everestrs/src/lib.rs
@@ -45,11 +47,17 @@ add_custom_command(
         ${CXXBRIDGE_BINARY}
 )
 
+add_custom_target(
+    CXXBRIDGE_GEN_TARGET
+    DEPENDS ${CXXBRIDGE_HEADER}
+)
+
 add_library(everestrs_sys STATIC
     ${EVERESTRS_FFI_SOURCE}
-    everestrs_sys/everestrs_sys.cpp
+    everestrs/src/everestrs_sys.cpp
 )
 add_library(everest::everestrs_sys ALIAS everestrs_sys)
+add_dependencies(everestrs_sys CXXBRIDGE_GEN_TARGET)
 
 set_property(
     TARGET
@@ -69,6 +77,8 @@ target_include_directories(everestrs_sys
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_BINARY_DIR}
+	${CXXBRIDGE_OUTPUT_DIR}
+
 )
 
 # This is a requirement that linking works on systems enforcing PIE

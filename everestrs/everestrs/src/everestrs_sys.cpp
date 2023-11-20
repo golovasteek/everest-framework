@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <variant>
 
-#include "cxxbridge/lib.rs.h"
+#include <everestrs/src/lib.rs.h>
 
 namespace {
 

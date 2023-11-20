@@ -89,7 +89,8 @@ mod ffi {
     }
 
     unsafe extern "C++" {
-        include!("everestrs_sys/everestrs_sys.hpp");
+        //FIXME
+        include!("everestrs/src/everestrs_sys.hpp");
 
         type Module;
         fn create_module(module_id: &str, prefix: &str, conf: &str) -> UniquePtr<Module>;
