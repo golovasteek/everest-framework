@@ -100,13 +100,18 @@ fn main() {
     match env::var("EVEREST_FRAMEWORK_LIB") {
         Ok(everest_framework_path) => {
             println!("Libraries were manually provided");
+            println!("Current path: {:?}", env::current_dir().unwrap());
+            let include_paths = &env::var("EVEREST_FRAMEWORK_INCLUDE_PATH")
+                            .expect("Please provide EVEREST_FRAMEWORK_INCLUDE_PATH as well");
+            println!("Include str: {:?}", include_paths);
+
+            let include_paths: Vec<_> = env::split_paths(include_paths).collect();
+            println!("Split items: {:?}", include_paths);
+            let include_paths: Vec<_> = include_paths.iter().map(|p| std::fs::canonicalize(&p).unwrap()).collect();
+            println!("Include paths: {:?}", include_paths);
             cxx_build::bridge("src/lib.rs")
                 .file("src/everestrs_sys.cpp")
-                .includes(
-                    env::split_paths(
-                        &env::var("EVEREST_FRAMEWORK_INCLUDE_PATH")
-                            .expect("Please provide EVEREST_FRAMEWORK_INCLUDE_PATH as well"))
-                )
+                .includes(include_paths)
                 .flag_if_supported("-std=c++17")
                 .compile("everstrs_sys");
 
