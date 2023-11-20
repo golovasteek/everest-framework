@@ -112,7 +112,7 @@ fn main() {
             cxx_build::bridge("src/lib.rs")
                 .file("src/everestrs_sys.cpp")
                 .includes(include_paths)
-                .flag_if_supported("-std=c++17")
+                .flag("-std=c++17")
                 .compile("everstrs_sys");
 
             println!("cargo:rerun-if-changed=src/lib.rs");
