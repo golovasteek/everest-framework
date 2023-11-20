@@ -107,7 +107,9 @@ fn main() {
 
             let include_paths: Vec<_> = env::split_paths(include_paths).collect();
             println!("Split items: {:?}", include_paths);
-            let include_paths: Vec<_> = include_paths.iter().map(|p| std::fs::canonicalize(&p).unwrap()).collect();
+            let include_paths: Vec<_> = include_paths
+                .iter()
+                .map(|p| std::fs::canonicalize(&p).expect(format!("Can not unwrap {:?}",p))).collect();
             println!("Include paths: {:?}", include_paths);
             cxx_build::bridge("src/lib.rs")
                 .file("src/everestrs_sys.cpp")
