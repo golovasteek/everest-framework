@@ -95,8 +95,24 @@ fn find_libs(root: &Path) -> Libraries {
 }
 
 fn main() {
-    let root = find_everest_workspace_root();
-    let libs = find_libs(&root);
+
+    let libs = match env::var("EVERESTRS_SYS_LIB") {
+        Ok(everestrs_sys_path) => {
+            println!("Libraries were manually provided");
+            let everest_framework_lib = env::var("EVEREST_FRAMEWORK_LIB")
+                .expect("EVEREST_FRAMEWORK_LIB env expected, if EVERESTRS_SYS_LIB is provided");
+            Libraries {
+                everestrs_sys: PathBuf::from(everestrs_sys_path),
+                framework: PathBuf::from(everest_framework_lib),
+            }
+        }
+        _ => {
+            println!("Libraries are now derived");
+            let root = find_everest_workspace_root();
+            find_libs(&root)
+        }
+    };
+
 
     print_link_options(&libs.everestrs_sys);
     print_link_options(&libs.framework);
