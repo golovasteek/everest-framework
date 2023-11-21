@@ -1,7 +1,8 @@
 use serde::{Deserialize, Deserializer, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct Interface {
     pub description: String,
     #[serde(default)]
@@ -11,6 +12,7 @@ pub struct Interface {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct Command {
     pub description: String,
     #[serde(default)]
@@ -32,19 +34,23 @@ pub enum Argument {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct NumberOptions {
     pub minimum: Option<f64>,
     pub maximum: Option<f64>,
+    pub default: Option<f64>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct IntegerOptions {
-    pub minimum: Option<f64>,
-    pub maximum: Option<f64>,
+    pub minimum: Option<i64>,
+    pub maximum: Option<i64>,
+    pub default: Option<i64>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ArrayOptions {
     pub min_items: Option<usize>,
     pub max_items: Option<usize>,
@@ -52,13 +58,13 @@ pub struct ArrayOptions {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ObjectOptions {
     #[serde(default)]
     pub properties: BTreeMap<String, Variable>,
 
     #[serde(default)]
-    pub required: Vec<String>,
+    pub required: HashSet<String>,
 
     #[serde(default)]
     pub additional_properties: bool,
@@ -74,7 +80,7 @@ pub enum StringFormat {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct StringOptions {
     pub pattern: Option<String>,
     pub format: Option<StringFormat>,
@@ -84,12 +90,14 @@ pub struct StringOptions {
     #[serde(rename = "enum")]
     pub enum_items: Option<Vec<String>>,
 
+    pub default: Option<String>,
+
     #[serde(rename = "$ref")]
     pub object_reference: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase", tag = "type")]
+#[serde(rename_all = "camelCase", tag = "type", deny_unknown_fields)]
 pub enum Type {
     Null,
     Boolean,
@@ -105,35 +113,35 @@ impl<'de> Deserialize<'de> for Variable {
     where
         D: Deserializer<'de>,
     {
-        let serde_json::Value::Object(mut map) = Deserialize::deserialize(deserializer)? else {
-return Err(serde::de::Error::custom("Variable must be a mapping"));
-};
+        let serde_yaml::Value::Mapping(mut map) = Deserialize::deserialize(deserializer)? else {
+            return Err(serde::de::Error::custom("Variable must be a mapping"));
+        };
 
         let description: Option<String> = match map.remove("description") {
             None => None,
             Some(v) => Some(
-                serde_json::from_value(v)
+                serde_yaml::from_value(v)
                     .map_err(|_| serde::de::Error::custom("'description' is not a String'"))?,
             ),
         };
 
         let arg_type = map
             .remove("type")
-            .ok_or(serde::de::Error::custom("Missing 'type'"))?;
+            .unwrap_or(serde_yaml::Value::String("object".to_string()));
 
         let arg = match arg_type {
-            val @ serde_json::Value::String(_) => {
-                map.insert("type".to_string(), val);
-                let t: Type = serde_json::from_value(serde_json::Value::Object(map))
+            val @ serde_yaml::Value::String(_) => {
+                map.insert(serde_yaml::Value::String("type".to_string()), val);
+                let t: Type = serde_yaml::from_value(serde_yaml::Value::Mapping(map))
                     .map_err(|e| serde::de::Error::custom(e.to_string()))?;
                 Argument::Single(t)
             }
-            serde_json::Value::Array(s) => {
+            serde_yaml::Value::Sequence(s) => {
                 let mut types = Vec::new();
                 for t in s.into_iter() {
-                    let mut mapping = serde_json::Map::new();
-                    mapping.insert("type".to_string(), t);
-                    let t: Type = serde_json::from_value(serde_json::Value::Object(mapping))
+                    let mut mapping = serde_yaml::Mapping::new();
+                    mapping.insert(serde_yaml::Value::String("type".to_string()), t);
+                    let t: Type = serde_yaml::from_value(serde_yaml::Value::Mapping(mapping))
                         .map_err(|e| serde::de::Error::custom(e.to_string()))?;
                     types.push(t);
                 }

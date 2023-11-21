@@ -12,3 +12,4 @@ thiserror = "1.0.48"
 
 [build-dependencies]
 cxx-build = { version = "1.0.107" }
+everestrs-build = { workspace = true }

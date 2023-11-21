@@ -1,0 +1,26 @@
+{% for name, types in types.children | items %}
+pub mod {{ name }} {
+{% include "types" %}
+}
+{% endfor %}
+
+{% for object in types.objects %}
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct {{ object.name }} {
+{% for p in object.properties %}
+/// {{ p.description | replace("\n", " ") }}
+#[serde(rename="{{ p.name }}")]
+pub {{ p.name | snake }}: {{ p.data_type }},
+{% endfor %}
+}
+{% endfor %}
+
+{% for enum in types.enums %}
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub enum {{ enum.name }} {
+{% for item in enum.items %}
+{{ item }},
+{% endfor %}
+}
+
+{% endfor %}

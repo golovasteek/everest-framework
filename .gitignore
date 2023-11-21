@@ -1,5 +1,6 @@
 *build
 *build-cross
+!everestrs-build
 target
 watcher.lua
 workspace.yaml

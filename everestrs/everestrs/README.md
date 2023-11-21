@@ -23,6 +23,15 @@ This is Rust support using cxx.rs to wrap the framework C++ library.
     proof, should everst at some point move to something different than MQTT as
     transport layer and for cleaner abstraction.
 
+## Differences to other EVerest language wrappers
+
+- The `enable_external_mqtt` is ignored for Rust modules. If you want to interact
+  with MQTT externally, just pull an external mqtt module (for example the
+  really excellent [rumqttc](https://docs.rs/rumqttc/latest/rumqttc/)) crate
+  into your module and use it directly. This is a concious decision to future
+  proof, should everst at some point move to something different than MQTT as
+  transport layer and for cleaner abstraction.
+
 ## Status
 
 Full support for requiring and providing interfaces is implemented, missing
