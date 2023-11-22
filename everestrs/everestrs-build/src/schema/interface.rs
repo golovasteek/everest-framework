@@ -161,7 +161,7 @@ impl<'de> Deserialize<'de> for Variable {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorEntry {
     pub reference: String,
 }
