@@ -178,10 +178,16 @@ fn as_typename(arg: &Argument, type_refs: &mut BTreeSet<TypeRef>) -> Result<Stri
 }
 
 #[derive(Debug, Clone, Serialize)]
+struct DataTypeContext {
+    name: String,
+    extra_serde_annotations: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
 struct ArgumentContext {
     name: String,
     description: Option<String>,
-    data_type: String,
+    data_type: DataTypeContext,
 }
 
 impl ArgumentContext {
@@ -193,7 +199,10 @@ impl ArgumentContext {
         Ok(ArgumentContext {
             name,
             description: var.description.clone(),
-            data_type: as_typename(&var.arg, type_refs)?,
+            data_type: DataTypeContext {
+                name: as_typename(&var.arg, type_refs)?,
+                extra_serde_annotations: Vec::new(),
+            },
         })
     }
 }
@@ -307,9 +316,12 @@ fn type_context_from_ref(
         Single(Object(args)) => {
             let mut properties = Vec::new();
             for (name, var) in &args.properties {
+                let mut extra_serde_annotations = Vec::new();
                 let data_type = {
                     let d = as_typename(&var.arg, type_refs)?;
                     if !args.required.contains(name) {
+                        extra_serde_annotations
+                            .push("skip_serializing_if = \"Option::is_none\"".to_string());
                         format!("Option<{}>", d)
                     } else {
                         d
@@ -318,7 +330,10 @@ fn type_context_from_ref(
                 properties.push(ArgumentContext {
                     name: name.clone(),
                     description: var.description.clone(),
-                    data_type,
+                    data_type: DataTypeContext {
+                        name: data_type,
+                        extra_serde_annotations,
+                    },
                 });
             }
             Ok(TypeContext::Object(ObjectTypeContext {
@@ -410,7 +425,10 @@ fn emit_config(config: BTreeMap<String, ConfigEntry>) -> Vec<ArgumentContext> {
             ConfigEnum::Boolean { default: _ } => ArgumentContext {
                 name: k,
                 description: v.description,
-                data_type: "bool".to_string(),
+                data_type: DataTypeContext {
+                    name: "bool".to_string(),
+                    extra_serde_annotations: Vec::new(),
+                },
             },
             ConfigEnum::Integer {
                 default: _,
@@ -419,7 +437,10 @@ fn emit_config(config: BTreeMap<String, ConfigEntry>) -> Vec<ArgumentContext> {
             } => ArgumentContext {
                 name: k,
                 description: v.description,
-                data_type: "i64".to_string(),
+                data_type: DataTypeContext {
+                    name: "i64".to_string(),
+                    extra_serde_annotations: Vec::new(),
+                },
             },
             ConfigEnum::Number {
                 default: _,
@@ -428,7 +449,10 @@ fn emit_config(config: BTreeMap<String, ConfigEntry>) -> Vec<ArgumentContext> {
             } => ArgumentContext {
                 name: k,
                 description: v.description,
-                data_type: "f64".to_string(),
+                data_type: DataTypeContext {
+                    name: "f64".to_string(),
+                    extra_serde_annotations: Vec::new(),
+                },
             },
             ConfigEnum::String {
                 default: _,
@@ -437,7 +461,10 @@ fn emit_config(config: BTreeMap<String, ConfigEntry>) -> Vec<ArgumentContext> {
             } => ArgumentContext {
                 name: k,
                 description: v.description,
-                data_type: "String".to_string(),
+                data_type: DataTypeContext {
+                    name: "String".to_string(),
+                    extra_serde_annotations: Vec::new(),
+                },
             },
         })
         .collect::<Vec<_>>()
