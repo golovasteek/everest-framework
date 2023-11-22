@@ -9,6 +9,9 @@ pub struct Interface {
     pub cmds: BTreeMap<String, Command>,
     #[serde(default)]
     pub vars: BTreeMap<String, Variable>,
+    // The errors interface is currently just a hull.
+    #[serde(default)]
+    pub errors: Vec<ErrorEntry>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -156,4 +159,9 @@ impl<'de> Deserialize<'de> for Variable {
 
         Ok(Variable { description, arg })
     }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ErrorEntry {
+    pub reference: String,
 }
