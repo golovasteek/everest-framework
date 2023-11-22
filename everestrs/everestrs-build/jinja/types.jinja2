@@ -9,8 +9,8 @@ pub mod {{ name }} {
 pub struct {{ object.name }} {
 {% for p in object.properties %}
 /// {{ p.description | replace("\n", " ") }}
-#[serde(rename="{{ p.name }}")]
-pub {{ p.name | snake }}: {{ p.data_type }},
+#[serde(rename="{{ p.name }}"{% if p.data_type.extra_serde_annotations %},{{ p.data_type.extra_serde_annotations | join(",") }}{% endif %})]
+pub {{ p.name | snake }}: {{ p.data_type.name }},
 {% endfor %}
 }
 {% endfor %}

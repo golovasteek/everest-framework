@@ -1,3 +1,4 @@
+use super::r#type::{BooleanOptions, IntegerOptions, NumberOptions, StringOptions};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -9,7 +10,8 @@ pub struct Manifest {
     pub provides: BTreeMap<String, ProvidesEntry>,
     #[serde(default)]
     pub requires: BTreeMap<String, RequiresEntry>,
-
+    #[serde(default)]
+    pub enable_telemetry: bool,
     // This is just here, so that we do not crash for deny_unknown_fields,
     // this is never used in Rust code.
     #[allow(dead_code)]
@@ -35,6 +37,8 @@ pub struct ProvidesEntry {
 #[serde(deny_unknown_fields)]
 pub struct RequiresEntry {
     pub interface: String,
+    pub min_connections: Option<i64>,
+    pub max_connections: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -54,26 +58,8 @@ pub struct ConfigEntry {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type", deny_unknown_fields)]
 pub enum ConfigEnum {
-    Boolean {
-        #[allow(dead_code)]
-        default: Option<bool>,
-    },
-    String {
-        #[allow(dead_code)]
-        default: Option<String>,
-        min_length: Option<i32>,
-        max_length: Option<i32>,
-    },
-    Integer {
-        #[allow(dead_code)]
-        default: Option<i64>,
-        minimum: Option<i64>,
-        maximum: Option<i64>,
-    },
-    Number {
-        #[allow(dead_code)]
-        minimum: Option<f64>,
-        default: Option<f64>,
-        maximum: Option<f64>,
-    },
+    Boolean(BooleanOptions),
+    String(StringOptions),
+    Integer(IntegerOptions),
+    Number(NumberOptions),
 }
