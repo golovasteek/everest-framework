@@ -11,6 +11,9 @@ pub struct Type {
 
     #[serde(flatten)]
     pub arg: TypeBase,
+
+    /// This is part of the Variable definition.
+    pub qos: Option<i64>,
 }
 
 /// The type may be either represented by a string or by an array of strings.

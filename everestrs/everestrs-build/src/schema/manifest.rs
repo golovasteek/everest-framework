@@ -37,6 +37,8 @@ pub struct ProvidesEntry {
 #[serde(deny_unknown_fields)]
 pub struct RequiresEntry {
     pub interface: String,
+    pub min_connections: Option<i64>,
+    pub max_connections: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
