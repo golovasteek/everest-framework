@@ -70,6 +70,9 @@ pub struct ObjectOptions {
     pub required: HashSet<String>,
 
     #[serde(default)]
+    pub qos: Option<i64>,
+
+    #[serde(default)]
     pub additional_properties: bool,
 
     #[serde(rename = "$ref")]
