@@ -18,9 +18,8 @@ pub struct Manifest {
     #[serde(default)]
     pub config: BTreeMap<String, ConfigEntry>,
 
-    // The errors interface is currently just a hull.
     #[serde(default)]
-    pub errors: Vec<ErrorEntry>,
+    pub capabilities: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -77,9 +76,4 @@ pub enum ConfigEnum {
         default: Option<f64>,
         maximum: Option<f64>,
     },
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct ErrorEntry {
-    pub reference: String,
 }
