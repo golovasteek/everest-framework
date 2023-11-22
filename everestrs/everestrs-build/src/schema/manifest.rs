@@ -1,3 +1,4 @@
+use super::r#type::{BooleanOptions, IntegerOptions, NumberOptions, StringOptions};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -55,26 +56,8 @@ pub struct ConfigEntry {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type", deny_unknown_fields)]
 pub enum ConfigEnum {
-    Boolean {
-        #[allow(dead_code)]
-        default: Option<bool>,
-    },
-    String {
-        #[allow(dead_code)]
-        default: Option<String>,
-        min_length: Option<i32>,
-        max_length: Option<i32>,
-    },
-    Integer {
-        #[allow(dead_code)]
-        default: Option<i64>,
-        minimum: Option<i64>,
-        maximum: Option<i64>,
-    },
-    Number {
-        #[allow(dead_code)]
-        minimum: Option<f64>,
-        default: Option<f64>,
-        maximum: Option<f64>,
-    },
+    Boolean(BooleanOptions),
+    String(StringOptions),
+    Integer(IntegerOptions),
+    Number(NumberOptions),
 }

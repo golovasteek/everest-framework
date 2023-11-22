@@ -1,7 +1,7 @@
 use crate::schema::{
-    interface::{Argument, ObjectOptions, StringOptions, Type, Variable},
     manifest::{ConfigEntry, ConfigEnum},
-    DataTypes, Interface, Manifest,
+    r#type::{DataTypes, ObjectOptions, StringOptions, Type, TypeBase, TypeEnum},
+    Interface, Manifest,
 };
 use anyhow::{anyhow, bail, Context, Result};
 use convert_case::{Case, Casing};
@@ -9,7 +9,7 @@ use minijinja::{Environment, UndefinedBehavior};
 use serde::{de::DeserializeOwned, Serialize};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 // We include the JINJA templates into the binary. This has the disadvantage
 // that every change to the templates requires a recompilation, but the
@@ -20,12 +20,6 @@ const CONFIG_JINJA: &str = include_str!("../jinja/config.jinja2");
 const MODULE_JINJA: &str = include_str!("../jinja/module.jinja2");
 const SERVICE_JINJA: &str = include_str!("../jinja/service.jinja2");
 const TYPES_JINJA: &str = include_str!("../jinja/types.jinja2");
-
-fn parse_yaml<T: DeserializeOwned>(everest_core: &Path, subdir: &str, name: &str) -> Result<T> {
-    let p = everest_core.join(format!("{subdir}/{name}.yaml"));
-    let blob = fs::read_to_string(&p).with_context(|| format!("Reading {p:?}"))?;
-    serde_yaml::from_str(&blob).with_context(|| format!("Parsing {p:?}"))
-}
 
 fn lazy_load<'a, T: DeserializeOwned>(
     storage: &'a mut HashMap<String, T>,
@@ -39,15 +33,28 @@ fn lazy_load<'a, T: DeserializeOwned>(
 
     let mut matches = everest_core
         .iter()
-        .filter_map(|core| match parse_yaml(core, prefix, postfix) {
-            Err(_) => None,
-            Ok(res) => Some(res),
+        .filter_map(|core| {
+            let p = core.join(format!("{prefix}/{postfix}.yaml"));
+            // If the file is missing we ignore the error since it may be
+            // present in an different root.
+            let Ok(blob) = fs::read_to_string(&p) else {
+                return None;
+            };
+            let out = serde_yaml::from_str(&blob).with_context(|| format!("Failed to parse {p:?}"));
+            match out {
+                Err(err) => {
+                    println!("{err:?}");
+                    None
+                }
+                Ok(res) => Some(res),
+            }
         })
         .collect::<Vec<_>>();
 
     assert!(
         matches.len() == 1,
-        "The name {postfix} must be defined exactly once"
+        "The name `{prefix}/{postfix}` must be defined exactly once: Found {}",
+        { matches.len() }
     );
 
     storage.insert(postfix.to_string(), matches.pop().unwrap());
@@ -138,12 +145,12 @@ impl std::fmt::Debug for TypeRef {
     }
 }
 
-fn as_typename(arg: &Argument, type_refs: &mut BTreeSet<TypeRef>) -> Result<String> {
-    use Argument::*;
-    use Type::*;
+fn as_typename(arg: &TypeBase, type_refs: &mut BTreeSet<TypeRef>) -> Result<String> {
+    use TypeBase::*;
+    use TypeEnum::*;
     Ok(match arg {
         Single(Null) => "()".to_string(),
-        Single(Boolean) => "bool".to_string(),
+        Single(Boolean(_)) => "bool".to_string(),
         Single(String(args)) => {
             if args.object_reference.is_none() {
                 "String".to_string()
@@ -187,7 +194,7 @@ struct ArgumentContext {
 impl ArgumentContext {
     pub fn from_schema(
         name: String,
-        var: &Variable,
+        var: &Type,
         type_refs: &mut BTreeSet<TypeRef>,
     ) -> Result<Self> {
         Ok(ArgumentContext {
@@ -294,8 +301,8 @@ fn type_context_from_ref(
     yaml_repo: &mut YamlRepo,
     type_refs: &mut BTreeSet<TypeRef>,
 ) -> Result<TypeContext> {
-    use Argument::*;
-    use Type::*;
+    use TypeBase::*;
+    use TypeEnum::*;
 
     let data_types_yaml = yaml_repo.get_data_types(&r.module_path.join("/"))?;
 
@@ -407,34 +414,22 @@ fn emit_config(config: BTreeMap<String, ConfigEntry>) -> Vec<ArgumentContext> {
     config
         .into_iter()
         .map(|(k, v)| match v.value {
-            ConfigEnum::Boolean { default: _ } => ArgumentContext {
+            ConfigEnum::Boolean(_) => ArgumentContext {
                 name: k,
                 description: v.description,
                 data_type: "bool".to_string(),
             },
-            ConfigEnum::Integer {
-                default: _,
-                minimum: _,
-                maximum: _,
-            } => ArgumentContext {
+            ConfigEnum::Integer(_) => ArgumentContext {
                 name: k,
                 description: v.description,
                 data_type: "i64".to_string(),
             },
-            ConfigEnum::Number {
-                default: _,
-                minimum: _,
-                maximum: _,
-            } => ArgumentContext {
+            ConfigEnum::Number(_) => ArgumentContext {
                 name: k,
                 description: v.description,
                 data_type: "f64".to_string(),
             },
-            ConfigEnum::String {
-                default: _,
-                max_length: _,
-                min_length: _,
-            } => ArgumentContext {
+            ConfigEnum::String(_) => ArgumentContext {
                 name: k,
                 description: v.description,
                 data_type: "String".to_string(),
