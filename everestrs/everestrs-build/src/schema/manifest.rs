@@ -9,7 +9,8 @@ pub struct Manifest {
     pub provides: BTreeMap<String, ProvidesEntry>,
     #[serde(default)]
     pub requires: BTreeMap<String, RequiresEntry>,
-
+    #[serde(default)]
+    pub enable_telemetry: bool,
     // This is just here, so that we do not crash for deny_unknown_fields,
     // this is never used in Rust code.
     #[allow(dead_code)]
