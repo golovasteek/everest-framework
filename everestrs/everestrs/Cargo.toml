@@ -9,7 +9,7 @@ cxx = { version = "1.0.107", features = ["c++17"] }
 serde = { version = "1.0.175", features = ["derive"] }
 serde_json = "1"
 thiserror = "1.0.48"
+everestrs-build = { workspace = true }
 
 [build-dependencies]
 cxx-build = { version = "1.0.107" }
-everestrs-build = { workspace = true }
