@@ -2,6 +2,7 @@
 *build-cross
 !everestrs-build
 target
+bazel-*
 watcher.lua
 workspace.yaml
 
