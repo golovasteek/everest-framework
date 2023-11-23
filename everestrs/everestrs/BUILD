@@ -1,0 +1,78 @@
+load("@rules_rust//rust:defs.bzl", "rust_library")
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
+
+rust_library(
+    name = "everestrs",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2021",
+    deps =  [
+        "@//third-party/bazel:argh",
+        "@//third-party/bazel:serde",
+        "@//third-party/bazel:serde_json",
+        "@//third-party/bazel:thiserror",
+        "@cxx.rs//:cxx",
+        ":everestrs_sys",
+        ":everestrs_bridge",
+        "@//everestrs/everestrs-build:everestrs-build",
+    ],
+    proc_macro_deps = [
+        "@//third-party/bazel:argh_derive",
+        "@//third-party/bazel:serde_derive",
+    ],
+    visibility = ["//visibility:public"],
+    compile_data = [":everestrs_sys_include"],
+)
+
+run_binary(
+    name = "everestrs_bridge/generated",
+    srcs = ["src/lib.rs"],
+    outs = [
+        "src/lib.rs.h",
+        "src/lib.rs.cc",
+    ],
+    args = [
+        "$(location src/lib.rs)",
+        "-o",
+        "$(location src/lib.rs.h)",
+        "-o",
+        "$(location src/lib.rs.cc)",
+    ],
+    tool = "@cxx.rs//:codegen",
+)
+
+cc_library(
+    name = "everestrs_bridge",
+    srcs = ["src/lib.rs" + ".cc"],
+    deps = [
+        ":everestrs_sys_include",
+        ":everestrs_bridge/include",
+        "@//:framework",
+    ],
+    copts = ["-std=c++17"],
+)
+
+cc_library(
+    name = "everestrs_sys",
+    srcs = ["src/everestrs_sys.cpp"],
+    deps = [
+        ":everestrs_sys_include",
+        ":everestrs_bridge/include",
+        "@//:framework",
+    ],
+    copts = ["-std=c++17"],
+    alwayslink = True,
+)
+
+cc_library(
+    name = "everestrs_bridge/include",
+    hdrs = ["src/lib.rs" + ".h"],
+    include_prefix = "everestrs",
+)
+
+cc_library(
+    name = "everestrs_sys_include",
+    hdrs = ["src/everestrs_sys.hpp"],
+    deps = ["@cxx.rs//:core"],
+    include_prefix = "everestrs",
+    visibility = ["//visibility:public"],
+)

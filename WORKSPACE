@@ -1,7 +1,6 @@
 workspace(name = "everest-framework")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 http_archive(
     name = "rules_rust",
@@ -161,8 +160,3 @@ http_archive(
     build_file = "//third-party/bazel:BUILD.nlohmann_json.bazel",
 )
 
-git_repository(
-    name = "cxx.rs",
-    remote = "https://github.com/dtolnay/cxx.git",
-    tag = "1.0.110",
-)
