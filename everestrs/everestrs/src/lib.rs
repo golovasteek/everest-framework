@@ -89,7 +89,6 @@ mod ffi {
     }
 
     unsafe extern "C++" {
-        //FIXME
         include!("everestrs/src/everestrs_sys.hpp");
 
         type Module;
