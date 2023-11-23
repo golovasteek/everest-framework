@@ -2,7 +2,10 @@
 *build-cross
 !everestrs-build
 target
-bazel-*
+bazel-bin
+bazel-out
+bazel-everest-framework
+bazel-testlogs
 watcher.lua
 workspace.yaml
 
