@@ -11,16 +11,15 @@ rust_library(
         "@//third-party/bazel:serde_json",
         "@//third-party/bazel:thiserror",
         "@cxx.rs//:cxx",
-        ":everestrs_sys",
-        ":everestrs_bridge",
-        "@//everestrs/everestrs-build:everestrs-build",
+        "@everest-framework//everestrs/everestrs:everestrs_sys",
+        "@everest-framework//everestrs/everestrs:everestrs_bridge",
+        "@everest-framework//everestrs/everestrs-build:everestrs-build",
     ],
     proc_macro_deps = [
         "@//third-party/bazel:argh_derive",
         "@//third-party/bazel:serde_derive",
     ],
     visibility = ["//visibility:public"],
-    compile_data = [":everestrs_sys_include"],
 )
 
 run_binary(
@@ -44,9 +43,9 @@ cc_library(
     name = "everestrs_bridge",
     srcs = ["src/lib.rs" + ".cc"],
     deps = [
-        ":everestrs_sys_include",
-        ":everestrs_bridge/include",
-        "@//:framework",
+        "@everest-framework//everestrs/everestrs:everestrs_sys_include",
+        "@everest-framework//everestrs/everestrs:everestrs_bridge/include",
+        "@everest-framework//:framework",
     ],
     copts = ["-std=c++17"],
 )
@@ -55,9 +54,9 @@ cc_library(
     name = "everestrs_sys",
     srcs = ["src/everestrs_sys.cpp"],
     deps = [
-        ":everestrs_sys_include",
-        ":everestrs_bridge/include",
-        "@//:framework",
+        "@everest-framework//everestrs/everestrs:everestrs_sys_include",
+        "@everest-framework//everestrs/everestrs:everestrs_bridge/include",
+        "@everest-framework//:framework",
     ],
     copts = ["-std=c++17"],
     alwayslink = True,

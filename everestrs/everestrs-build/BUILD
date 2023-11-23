@@ -1,7 +1,7 @@
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
 
 filegroup(
-  name = "teplates",
+  name = "templates",
   srcs = glob(["jinja/**/*"]),
 )
 
@@ -17,7 +17,7 @@ rust_library(
     "@//third-party/bazel:serde",
     "@//third-party/bazel:serde_yaml",
   ],
-  data = [":teplates"],
+  data = ["@everest-framework//everestrs/everestrs-build:templates"],
   visibility = ["//visibility:public"],
   edition = "2021",
 )
@@ -26,7 +26,7 @@ rust_binary(
   name = "codegen",
   srcs = glob(["src/bin/**/*.rs"]),
   deps = [
-    ":everestrs-build",
+    "@everest-framework//everestrs/everestrs-build:everestrs-build",
     "@//third-party/bazel:anyhow",
     "@//third-party/bazel:argh",
     "@//third-party/bazel:argh_shared",

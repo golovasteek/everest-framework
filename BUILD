@@ -45,11 +45,11 @@ cc_binary(
     exclude = ["src/controller/ipc.cpp", "src/controller/ipc.hpp"]
   ),
   deps = [
-    ":controller-ipc",
     "@com_github_fmtlib_fmt//:fmt",
     "@com_github_biojppm_rapidyaml//:ryml",
     "@com_github_everest_liblog//:liblog",
-    ":framework",
+    "@everest-framework//:controller-ipc",
+    "@everest-framework//:framework",
     "@com_github_warmcatt_libwebsockets//:libwebsockets",
   ],
   copts = ["-std=c++17"],
@@ -66,14 +66,8 @@ cc_binary(
     "@com_github_pboettch_json-schema-validator//:json-schema-validator",
     "@//third-party/bazel:boost_program_options",
     "@//third-party/bazel:boost_log",
-    ":controller-ipc",
-    ":framework",
+    "@everest-framework//:controller-ipc",
+    "@everest-framework//:framework",
   ],
   copts = ["-std=c++17"],
-)
-
-filegroup(
-  name = "schemas",
-  srcs = glob(["schemas/*.yaml"]),
-  visibility = ["//visibility:public"],
 )
