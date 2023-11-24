@@ -9,7 +9,7 @@
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
 # buildifier: disable=bzl-visibility
-load("@everest-framework//third-party/bazel/rust:defs.bzl", _crate_repositories = "crate_repositories")
+load("@com_github_everest_everest-framework//third-party/bazel/rust:defs.bzl", _crate_repositories = "crate_repositories")
 
 # buildifier: disable=bzl-visibility
 load("@rules_rust//crate_universe/private:crates_vendor.bzl", "crates_vendor_remote_repository")
@@ -18,8 +18,8 @@ def crate_repositories():
     maybe(
         crates_vendor_remote_repository,
         name = "vendor",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.bazel"),
-        defs_module = Label("@everest-framework//third-party/bazel/rust:defs.bzl"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.bazel"),
+        defs_module = Label("@com_github_everest_everest-framework//third-party/bazel/rust:defs.bzl"),
     )
 
     _crate_repositories()

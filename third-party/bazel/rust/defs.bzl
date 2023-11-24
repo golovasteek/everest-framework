@@ -411,7 +411,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/anyhow/1.0.75/download"],
         strip_prefix = "anyhow-1.0.75",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.anyhow-1.0.75.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.anyhow-1.0.75.bazel"),
     )
 
     maybe(
@@ -421,7 +421,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/argh/0.1.12/download"],
         strip_prefix = "argh-0.1.12",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.argh-0.1.12.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.argh-0.1.12.bazel"),
     )
 
     maybe(
@@ -431,7 +431,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/argh_derive/0.1.12/download"],
         strip_prefix = "argh_derive-0.1.12",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.argh_derive-0.1.12.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.argh_derive-0.1.12.bazel"),
     )
 
     maybe(
@@ -441,7 +441,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/argh_shared/0.1.12/download"],
         strip_prefix = "argh_shared-0.1.12",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.argh_shared-0.1.12.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.argh_shared-0.1.12.bazel"),
     )
 
     maybe(
@@ -451,7 +451,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/cc/1.0.83/download"],
         strip_prefix = "cc-1.0.83",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.cc-1.0.83.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.cc-1.0.83.bazel"),
     )
 
     maybe(
@@ -461,7 +461,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/convert_case/0.6.0/download"],
         strip_prefix = "convert_case-0.6.0",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.convert_case-0.6.0.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.convert_case-0.6.0.bazel"),
     )
 
     maybe(
@@ -471,7 +471,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/cxx/1.0.110/download"],
         strip_prefix = "cxx-1.0.110",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.cxx-1.0.110.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.cxx-1.0.110.bazel"),
     )
 
     maybe(
@@ -481,7 +481,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/cxxbridge-flags/1.0.110/download"],
         strip_prefix = "cxxbridge-flags-1.0.110",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.cxxbridge-flags-1.0.110.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.cxxbridge-flags-1.0.110.bazel"),
     )
 
     maybe(
@@ -491,7 +491,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/cxxbridge-macro/1.0.110/download"],
         strip_prefix = "cxxbridge-macro-1.0.110",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.cxxbridge-macro-1.0.110.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.cxxbridge-macro-1.0.110.bazel"),
     )
 
     maybe(
@@ -501,7 +501,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/equivalent/1.0.1/download"],
         strip_prefix = "equivalent-1.0.1",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.equivalent-1.0.1.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.equivalent-1.0.1.bazel"),
     )
 
     maybe(
@@ -511,7 +511,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/hashbrown/0.14.2/download"],
         strip_prefix = "hashbrown-0.14.2",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.hashbrown-0.14.2.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.hashbrown-0.14.2.bazel"),
     )
 
     maybe(
@@ -521,7 +521,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/indexmap/2.1.0/download"],
         strip_prefix = "indexmap-2.1.0",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.indexmap-2.1.0.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.indexmap-2.1.0.bazel"),
     )
 
     maybe(
@@ -531,7 +531,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/itoa/1.0.9/download"],
         strip_prefix = "itoa-1.0.9",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.itoa-1.0.9.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.itoa-1.0.9.bazel"),
     )
 
     maybe(
@@ -541,7 +541,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/libc/0.2.150/download"],
         strip_prefix = "libc-0.2.150",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.libc-0.2.150.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.libc-0.2.150.bazel"),
     )
 
     maybe(
@@ -551,7 +551,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/link-cplusplus/1.0.9/download"],
         strip_prefix = "link-cplusplus-1.0.9",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.link-cplusplus-1.0.9.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.link-cplusplus-1.0.9.bazel"),
     )
 
     maybe(
@@ -561,7 +561,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/minijinja/1.0.10/download"],
         strip_prefix = "minijinja-1.0.10",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.minijinja-1.0.10.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.minijinja-1.0.10.bazel"),
     )
 
     maybe(
@@ -571,7 +571,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/proc-macro2/1.0.69/download"],
         strip_prefix = "proc-macro2-1.0.69",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.proc-macro2-1.0.69.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.proc-macro2-1.0.69.bazel"),
     )
 
     maybe(
@@ -581,7 +581,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/quote/1.0.33/download"],
         strip_prefix = "quote-1.0.33",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.quote-1.0.33.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.quote-1.0.33.bazel"),
     )
 
     maybe(
@@ -591,7 +591,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/ryu/1.0.15/download"],
         strip_prefix = "ryu-1.0.15",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.ryu-1.0.15.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.ryu-1.0.15.bazel"),
     )
 
     maybe(
@@ -601,7 +601,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/serde/1.0.193/download"],
         strip_prefix = "serde-1.0.193",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.serde-1.0.193.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.serde-1.0.193.bazel"),
     )
 
     maybe(
@@ -611,7 +611,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/serde_derive/1.0.193/download"],
         strip_prefix = "serde_derive-1.0.193",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.serde_derive-1.0.193.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.serde_derive-1.0.193.bazel"),
     )
 
     maybe(
@@ -621,7 +621,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/serde_json/1.0.108/download"],
         strip_prefix = "serde_json-1.0.108",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.serde_json-1.0.108.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.serde_json-1.0.108.bazel"),
     )
 
     maybe(
@@ -631,7 +631,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/serde_yaml/0.9.27/download"],
         strip_prefix = "serde_yaml-0.9.27",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.serde_yaml-0.9.27.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.serde_yaml-0.9.27.bazel"),
     )
 
     maybe(
@@ -641,7 +641,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/syn/2.0.39/download"],
         strip_prefix = "syn-2.0.39",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.syn-2.0.39.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.syn-2.0.39.bazel"),
     )
 
     maybe(
@@ -651,7 +651,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/thiserror/1.0.50/download"],
         strip_prefix = "thiserror-1.0.50",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.thiserror-1.0.50.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.thiserror-1.0.50.bazel"),
     )
 
     maybe(
@@ -661,7 +661,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/thiserror-impl/1.0.50/download"],
         strip_prefix = "thiserror-impl-1.0.50",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.thiserror-impl-1.0.50.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.thiserror-impl-1.0.50.bazel"),
     )
 
     maybe(
@@ -671,7 +671,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/unicode-ident/1.0.12/download"],
         strip_prefix = "unicode-ident-1.0.12",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.unicode-ident-1.0.12.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.unicode-ident-1.0.12.bazel"),
     )
 
     maybe(
@@ -681,7 +681,7 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/unicode-segmentation/1.10.1/download"],
         strip_prefix = "unicode-segmentation-1.10.1",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.unicode-segmentation-1.10.1.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.unicode-segmentation-1.10.1.bazel"),
     )
 
     maybe(
@@ -691,5 +691,5 @@ def crate_repositories():
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/unsafe-libyaml/0.2.9/download"],
         strip_prefix = "unsafe-libyaml-0.2.9",
-        build_file = Label("@everest-framework//third-party/bazel/rust:BUILD.unsafe-libyaml-0.2.9.bazel"),
+        build_file = Label("@com_github_everest_everest-framework//third-party/bazel/rust:BUILD.unsafe-libyaml-0.2.9.bazel"),
     )
