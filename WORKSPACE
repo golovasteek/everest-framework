@@ -20,23 +20,6 @@ load("@rules_rust//crate_universe:repositories.bzl", "crate_universe_dependencie
 
 crate_universe_dependencies()
 
-load("@rules_rust//crate_universe:defs.bzl", "crates_repository", "crate")
-
-crates_repository(
-    name = "crate_index",
-    cargo_lockfile = "//everestrs:Cargo.lock",
-    isolated = False,
-    manifests = [
-      "//everestrs:Cargo.toml",
-      "//everestrs/everestrs:Cargo.toml",
-      "//everestrs/everestrs-build:Cargo.toml",
-    ],
-)
-
-load("@crate_index//:defs.bzl", "crate_repositories")
-
-crate_repositories()
-
 load("//third-party/bazel:deps_fetch.bzl", everest_framework_fetch="deps_fetch")
 everest_framework_fetch()
 

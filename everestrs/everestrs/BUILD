@@ -6,18 +6,14 @@ rust_library(
     srcs = glob(["src/**/*.rs"]),
     edition = "2021",
     deps =  [
-        "@//third-party/bazel:argh",
-        "@//third-party/bazel:serde",
-        "@//third-party/bazel:serde_json",
-        "@//third-party/bazel:thiserror",
+        "//third-party/bazel:argh",
+        "//third-party/bazel:serde",
+        "//third-party/bazel:serde_json",
+        "//third-party/bazel:thiserror",
         "@cxx.rs//:cxx",
         "@everest-framework//everestrs/everestrs:everestrs_sys",
         "@everest-framework//everestrs/everestrs:everestrs_bridge",
         "@everest-framework//everestrs/everestrs-build:everestrs-build",
-    ],
-    proc_macro_deps = [
-        "@//third-party/bazel:argh_derive",
-        "@//third-party/bazel:serde_derive",
     ],
     visibility = ["//visibility:public"],
 )
