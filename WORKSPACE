@@ -37,14 +37,8 @@ load("@crate_index//:defs.bzl", "crate_repositories")
 
 crate_repositories()
 
-load("//third-party/bazel:deps.bzl", everest_framework_deps="everest_framework_deps")
-everest_framework_deps()
+load("//third-party/bazel:deps_fetch.bzl", everest_framework_fetch="deps_fetch")
+everest_framework_fetch()
 
-load("@cxx.rs//third-party/bazel:defs.bzl", cxx_crate_repositories = "crate_repositories")
-cxx_crate_repositories()
-
-load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
-boost_deps()
-
-load("@com_github_3rdparty_bazel_rules_curl//bazel:deps.bzl", curl_deps="deps")
-curl_deps()
+load("//third-party/bazel:deps_init.bzl", everest_framework_init="deps_init")
+everest_framework_init()
