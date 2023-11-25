@@ -9,7 +9,7 @@ filegroup(
 rust_library(
   name = "everestrs-build",
   srcs = glob(["src/**/*.rs"], exclude = ["src/bin/**"]),
-  deps = all_crate_deps(),
+  deps = all_crate_deps("@com_github_everest_everest-framework//everestrs/everestrs-build"),
   data = [":teplates"],
   visibility = ["//visibility:public"],
 )
@@ -17,5 +17,5 @@ rust_library(
 rust_binary(
   name = "codegen",
   srcs = glob(["src/bin/**/*.rs"]),
-  deps = [":everestrs-build"] + all_crate_deps(),
+  deps = [":everestrs-build"] + all_crate_deps("@com_github_everest_everest-framework//everestrs/everestrs-build"),
 )
