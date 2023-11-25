@@ -1,4 +1,9 @@
+
 workspace(name = "com_github_everest_everest-framework")
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 load("//third-party/bazel:repos.bzl", "everest_framework_repos")
 
@@ -7,3 +12,53 @@ everest_framework_repos()
 load("//third-party/bazel:defs.bzl", "everest_framework_deps")
 
 everest_framework_deps()
+
+
+http_archive(
+    name = "rules_rust",
+    # sha256 = "814680e1ab535f799fd10e8739ddca901351ceb4d2d86dd8126c22d36e9fcbd9",
+    urls = ["https://github.com/bazelbuild/rules_rust/releases/download/0.31.0/rules_rust-v0.31.0.tar.gz"],
+)
+
+load("@rules_rust//rust:repositories.bzl", "rules_rust_dependencies", "rust_register_toolchains", "rust_repository_set")
+
+rules_rust_dependencies()
+
+RUST_VERSIONS = ["1.70.0"]
+rust_register_toolchains(
+    edition="2021",
+    versions = RUST_VERSIONS,
+)
+
+
+load("@rules_rust//crate_universe:repositories.bzl", "crate_universe_dependencies")
+
+crate_universe_dependencies()
+
+load("@rules_rust//crate_universe:defs.bzl", "crates_repository", "crate")
+
+crates_repository(
+    name = "crate_index",
+    cargo_lockfile = "//everestrs:Cargo.lock",
+    isolated = False,
+    manifests = [
+	"//everestrs/everestrs:Cargo.toml",
+	"//everestrs:Cargo.toml",
+	"//everestrs/everestrs-build:Cargo.toml",
+    ],
+    generate_binaries = True,
+)
+
+load("@crate_index//:defs.bzl", "crate_repositories")
+
+crate_repositories()
+
+git_repository(
+    name = "cxx.rs",
+    remote = "https://github.com/dtolnay/cxx.git",
+    tag = "1.0.110",
+)
+
+load("@cxx.rs//third-party/bazel:defs.bzl", cxxrs_crate_repositories = "crate_repositories")
+
+cxxrs_crate_repositories()
