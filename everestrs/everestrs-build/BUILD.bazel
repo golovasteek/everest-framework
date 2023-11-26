@@ -1,15 +1,20 @@
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
-load("@crate_index//:defs.bzl", "all_crate_deps")
 
 filegroup(
   name = "teplates",
   srcs = glob(["jinja/**/*"]),
 )
-
 rust_library(
   name = "everestrs-build",
   srcs = glob(["src/**/*.rs"], exclude = ["src/bin/**"]),
-  deps = all_crate_deps("@com_github_everest_everest-framework//everestrs/everestrs-build"),
+  deps = [
+    "@crate_index//:anyhow", 
+    "@crate_index//:convert_case", 
+    "@crate_index//:minijinja",
+    "@crate_index//:serde",
+    "@crate_index//:serde_json",
+    "@crate_index//:serde_yaml",
+  ],
   data = [":teplates"],
   visibility = ["//visibility:public"],
 )
@@ -17,5 +22,9 @@ rust_library(
 rust_binary(
   name = "codegen",
   srcs = glob(["src/bin/**/*.rs"]),
-  deps = [":everestrs-build"] + all_crate_deps("@com_github_everest_everest-framework//everestrs/everestrs-build"),
+  deps = [
+    ":everestrs-build",
+    "@crate_index//:anyhow", 
+    "@crate_index__argh-0.1.12//:argh",
+  ],
 )
